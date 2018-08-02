@@ -34,6 +34,7 @@ MyTime MyFuncionCenter::timeIntegrator(const MyTime &myTime)
         tmpTime    = timeIntegrator(myTime.GPT);
         return tmpTime;
     }
+    return tmpTime;                                                             // This return has no means
 }
 
 /*------------------------------------------------------------------------------

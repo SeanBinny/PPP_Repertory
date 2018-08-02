@@ -1,7 +1,7 @@
 #ifndef MYFUNCIONCENTER_H
 #define MYFUNCIONCENTER_H
 #include <cmath>
-#include "DataCenter.h"
+#include "ProductDataCenter.h"
 
 
 #define SEC_DAY 1.0 / 86400.0

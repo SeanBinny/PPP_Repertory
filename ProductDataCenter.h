@@ -1,61 +1,13 @@
-#ifndef DATACENETR_H
-#define DATACENETR_H
+#ifndef PRODUCTDATACENETR_H
+#define PRODUCTDATACENETR_H
 #include <vector>
 #include <Eigen/Eigen>
 
 using namespace std;
 using namespace Eigen;
-#include "filecenter.h"
+#include "FileCenter.h"
+#include "PublicDataCenter.h"
 
-#define JDtoMJD 2400000.5
-/*                    ****************************************************                                       */
-/*******************************         Public  Data           **************************************************/
-/*                    ****************************************************                                       */
-/*--------------------------------------------------------------
- * Function : Save single epoch time
- *-------------------------------------------------------------*/
-struct EpochTime
-{
-    int    year;
-    int    month;
-    int    day;
-    int    hour;
-    int    minute;
-    double second;
-
-    EpochTime()
-        : year(-1), month (-1), day   (-1),
-          hour(-1), minute(-1), second(-1){}
-    EpochTime(int Y, int M, int D,
-              int h, int m, int s)
-        : year(Y), month (M), day   (D),
-          hour(h), minute(m), second(s){}
-};
-/*--------------------------------------------------------------
- * Function : Save GPS time
- *-------------------------------------------------------------*/
-struct GpsTime
-{
-    int    week;
-    double sec;
-    GpsTime()
-        :  week(-1), sec(-1) {}
-};
-/*--------------------------------------------------------------
- * Function : Save all time types
- *-------------------------------------------------------------*/
-struct MyTime
-{
-    double    JD;                                                // Julian Date
-    double    MJD;                                               // Modified Julian Date
-    double    DOY;                                               // DOY-Day Of Year
-    EpochTime EPT;                                               // Epoch Time (gregorian calendar)
-    GpsTime   GPT;                                               // GPS Time
-
-    MyTime()
-        :JD(-1), MJD(-1), DOY(-1) {}
-
-};
 /*                    ****************************************************                                       */
 /*******************************      Precise ephemeris file(*.sp3)    *******************************************/
 /*                    ****************************************************                                       */
@@ -256,20 +208,30 @@ struct AntennaData
     QString  sateTwoType;                                        // satellite two Type
     int      sateOneNum;                                         // satellite one number
     int      sateTwoNum;                                         // satellite two number
-    double   DAZI;                                               // Azimuth increment
     double   ZEN1;
     double   ZEN2;
+    double   DAZI;                                               // Azimuth increment
     double   DZEN;                                               // Elevation increment
-    double   OF_FREQUENCIES;
     double   VALID_FROM;                                         // The start julian date
     double   VALID_UNTIL;                                        // The end julian date
-
     QString  SINEX_CODE_Type;
     double   SINEX_CODE;
+    double   OF_FREQUENCIES;
     double   F1_NEU[3];
     MatrixXd F1_NOAZI;                                           // Save data of frequency
     double   F2_NEU[3];
     MatrixXd F2_NOAZI;                                           // Save data of frequency
+
+    AntennaData()
+        : sateOneNum(0),  sateTwoNum(0),
+          ZEN1(0.0),      ZEN2(0.0),
+          DAZI(0.0),      DZEN(0.0),
+          VALID_FROM(0.0),VALID_UNTIL(0.0),
+          SINEX_CODE(0.0),OF_FREQUENCIES(0.0)
+    {
+
+    }
+
 
 };
 /*--------------------------------------------------------------
@@ -279,12 +241,13 @@ struct AntennaData
 class AntennaInfoFile
 {
 public:
+   ~AntennaInfoFile();
     virtual bool   readFile(const QString &filePath);            // Inherit function
 public:
-    static  AntennaData antennaData_GPS[32][3];
-    static  AntennaData antennaData_BDS[32][3];
-    static  AntennaData antennaData_GLONASS[32][3];
-    static  AntennaData antennaData_Galileo[60][3];
+    static  AntennaData **antennaData_GPS;                       // 1) Use 2D array to conserve memory
+    static  AntennaData **antennaData_BDS;                       // 2) Only Galileo need 60 rows, others are 32 rows
+    static  AntennaData **antennaData_GLONASS;                   // 3) This array are not have eual length ,some of
+    static  AntennaData **antennaData_Galileo;                   //    them has 0 element
     static  vector <AntennaData> antennaData_Other;
 
 private:
@@ -294,7 +257,7 @@ private:
     static QString     PCV_TYPE;
     static QString     productType; /* Unuse*/
 
-
 };
+
 
 #endif // DATACENETR_H

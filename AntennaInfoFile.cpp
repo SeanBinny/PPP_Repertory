@@ -1,4 +1,4 @@
-#include "DataCenter.h"
+#include "ProductDataCenter.h"
 #include "MyFunctionCenter.h"
 
 
@@ -8,14 +8,43 @@ QString     AntennaInfoFile::SYST;
 QString     AntennaInfoFile::REFANT;
 QString     AntennaInfoFile::PCV_TYPE;
 QString     AntennaInfoFile::productType;
-AntennaData AntennaInfoFile::antennaData_GPS[32][3];
-AntennaData AntennaInfoFile::antennaData_BDS[32][3];
-AntennaData AntennaInfoFile::antennaData_GLONASS[32][3];
-AntennaData AntennaInfoFile::antennaData_Galileo[60][3];
 vector <AntennaData> AntennaInfoFile::antennaData_Other;
+
+AntennaData **AntennaInfoFile::antennaData_GPS     = NULL;
+AntennaData **AntennaInfoFile::antennaData_BDS     = NULL;
+AntennaData **AntennaInfoFile::antennaData_GLONASS = NULL;
+AntennaData **AntennaInfoFile::antennaData_Galileo = NULL;
 /*------------------------------------------------------------------------------------------*/
 
 
+/*------------------------------------------------------------------------------
+ * Name     : ~AntennaInfoFile
+ * Function :  To disconstruct pointer member
+ * Input    :  None
+ * Output   :  None
+ *-----------------------------------------------------------------------------*/
+AntennaInfoFile::~AntennaInfoFile()
+{
+    for (int i = 0; i < 32; i++)
+    {
+         delete [] antennaData_GPS[i];
+         delete [] antennaData_BDS[i];
+         delete [] antennaData_GLONASS[i];
+    }
+    for (int i = 0; i < 60; i++)
+         delete [] antennaData_Galileo[i];
+    delete antennaData_GPS;
+    delete antennaData_BDS;
+    delete antennaData_GLONASS;
+    delete antennaData_Galileo;
+}
+
+/*------------------------------------------------------------------------------
+ * Name     : readFile
+ * Function : read antenna information file (*.atx)
+ * Input    : const QString &filePath
+ * Output   : bool (if read success)
+ *-----------------------------------------------------------------------------*/
 bool  AntennaInfoFile::readFile(const QString &filePath)                                     // Inherit function
 {
 //    QFileInfo fi;
@@ -42,10 +71,10 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
     /*------------------------- Read Header ------------------------------------------------*/
     lineQStr      = AntennaFile.readLine();                                                  // ANTEX VERSION / SYST
     ANTEX_VERSION = lineQStr.mid(0, 11).toDouble();
-    SYST          = lineQStr.mid(12,38);
+    SYST          = lineQStr.mid(12,38).trimmed();
     lineQStr      = AntennaFile.readLine();                                                  // PCV TYPE / REFANT
-    PCV_TYPE      = lineQStr.mid(0, 19);
-    REFANT        = lineQStr.mid(20,19);
+    PCV_TYPE      = lineQStr.mid(0, 19).trimmed();
+    REFANT        = lineQStr.mid(20,19).trimmed();
     if (REFANT   == "")
         REFANT    = "AOAD/M_T";
 
@@ -61,17 +90,17 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
         {
             AntennaData antennaData;
             lineQStr                = AntennaFile.readLine();                               // TYPE / SERIAL NO
-            antennaData.antennaType = lineQStr.mid(0, 20);
+            antennaData.antennaType = lineQStr.mid(0, 20).trimmed();
             antennaData.sateOneType = lineQStr.mid(20, 1);
             antennaData.sateOneNum  = lineQStr.mid(21,18).toInt();
             antennaData.sateTwoType = lineQStr.mid(40, 1);
             antennaData.sateTwoNum  = lineQStr.mid(41, 9).toInt();
-            antennaData.COSPAR_ID   = lineQStr.mid(50, 9);
+            antennaData.COSPAR_ID   = lineQStr.mid(50, 9).trimmed();
 
             lineQStr                      = AntennaFile.readLine();                         // METH / BY / # / DATE
-            antennaData.calibrationMethod = lineQStr.mid(0, 19);
-            antennaData.agencyName        = lineQStr.mid(20,19);
-            antennaData.calibrationMethod = lineQStr.mid(0, 19);
+            antennaData.calibrationMethod = lineQStr.mid(0, 19).trimmed();
+            antennaData.agencyName        = lineQStr.mid(20,19).trimmed();
+            antennaData.calibrationMethod = lineQStr.mid(0, 19).trimmed();
             antennaData.myTime.EPT.year   = lineQStr.mid(57, 2).toInt() + 2000;
             for (int i = 0; i < 12; i++)
             {
@@ -161,6 +190,15 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
             /*----------------------------- Choose tyoe and save -------------------------*/
             if (antennaData.sateOneType == "G")
             {
+                if (antennaData_GPS == NULL)                                               // Set 1D and set NULL
+                {
+                    antennaData_GPS = new AntennaData *[32];
+                    for (int i = 0; i < 32; i++)                                           // Set 2D
+                        antennaData_GPS[i] = NULL;
+                }
+                if (antennaData_GPS[antennaData.sateOneNum - 1] == NULL)
+                    antennaData_GPS[antennaData.sateOneNum - 1] = new AntennaData [3];
+
                 if (antennaData_GPS[antennaData.sateOneNum - 1][0].sateOneNum == 0)
                     antennaData_GPS[antennaData.sateOneNum - 1][0] = antennaData;
                 else if (antennaData_GPS[antennaData.sateOneNum - 1][1].sateOneNum == 0)
@@ -170,6 +208,15 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
             }
             else if (antennaData.sateOneType == "C")
             {
+                if (antennaData_BDS == NULL)
+                {
+                    antennaData_BDS = new AntennaData *[32];
+                    for (int i = 0; i < 32; i++)
+                        antennaData_BDS[i] = NULL;
+                }
+                if (antennaData_BDS[antennaData.sateOneNum - 1] == NULL)
+                    antennaData_BDS[antennaData.sateOneNum - 1] = new AntennaData [3];
+
                 if (antennaData_BDS[antennaData.sateOneNum - 1][0].sateOneNum == 0)
                     antennaData_BDS[antennaData.sateOneNum - 1][0] = antennaData;
                 else if (antennaData_BDS[antennaData.sateOneNum - 1][1].sateOneNum == 0)
@@ -179,6 +226,15 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
             }
             else if (antennaData.sateOneType == "R")
             {
+                if (antennaData_GLONASS == NULL)
+                {
+                    antennaData_GLONASS = new AntennaData *[32];
+                    for (int i = 0; i < 32; i++)
+                        antennaData_GLONASS[i] = NULL;
+                }
+                if (antennaData_GLONASS[antennaData.sateOneNum - 1] == NULL)
+                    antennaData_GLONASS[antennaData.sateOneNum - 1] = new AntennaData [3];
+
                 if (antennaData_GLONASS[antennaData.sateOneNum - 1][0].sateOneNum == 0)
                     antennaData_GLONASS[antennaData.sateOneNum - 1][0] = antennaData;
                 else if (antennaData_GLONASS[antennaData.sateOneNum - 1][1].sateOneNum == 0)
@@ -188,6 +244,15 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
             }
             else if (antennaData.sateOneType == "E")
             {
+                if (antennaData_Galileo == NULL)
+                {
+                    antennaData_Galileo = new AntennaData *[60];
+                    for (int i = 0; i < 60; i++)
+                        antennaData_Galileo[i] = NULL;
+                }
+                if (antennaData_Galileo[antennaData.sateOneNum - 1] == NULL)
+                    antennaData_Galileo[antennaData.sateOneNum - 1] = new AntennaData [3];
+
                 if (antennaData_Galileo[antennaData.sateOneNum - 1][0].sateOneNum == 0)
                     antennaData_Galileo[antennaData.sateOneNum - 1][0] = antennaData;
                 else if (antennaData_Galileo[antennaData.sateOneNum - 1][1].sateOneNum == 0)
@@ -201,6 +266,114 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
    }
    AntennaFile.close();
    return true;
-
-   // 数组里面村指针
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* for test --------------------------------*
+ *    AntennaData B00;
+   B00 = antennaData_BDS[0][0];
+   AntennaData B01;
+   B01 = antennaData_BDS[0][1];
+   AntennaData B02;
+   B02 = antennaData_BDS[0][2];
+
+   AntennaData B60;
+   B60 = antennaData_BDS[6][0];
+  // AntennaData B310;
+  // B310 = antennaData_BDS[31][0];
+
+
+   AntennaData GL00;
+   GL00 = antennaData_GLONASS[0][0];
+   AntennaData GL02;
+   GL02 = antennaData_GLONASS[0][2];
+   AntennaData GL310;
+   if (antennaData_GLONASS[31] != NULL)
+       GL310 = antennaData_GLONASS[31][0];
+
+   AntennaData GL150;
+   if (antennaData_GLONASS[15] != NULL)
+   GL150 = antennaData_GLONASS[15][0];
+
+   AntennaData G00;
+   G00 = antennaData_GPS[0][0];
+   AntennaData G02;
+   G02 = antennaData_GPS[0][2];
+   AntennaData G310;
+   G310 = antennaData_GPS[31][0];
+   AntennaData G311;
+   G311 = antennaData_GPS[31][1];
+   AntennaData G312;
+   G312 = antennaData_GPS[31][2];*/
+
+
+/* for replace ---------------------------------------
+ *
+ * //AntennaData AntennaInfoFile::antennaData_GPS[32][3];
+//AntennaData AntennaInfoFile::antennaData_BDS[32][3];
+//AntennaData AntennaInfoFile::antennaData_GLONASS[32][3];
+//AntennaData AntennaInfoFile::antennaData_Galileo[60][3];
+ *
+ *
+ *    static  AntennaData antennaData_GPS[32][3];
+//    static  AntennaData antennaData_BDS[32][3];
+//    static  AntennaData antennaData_GLONASS[32][3];
+//    static  AntennaData antennaData_Galileo[60][3];
+ *
+ *
+//            if (antennaData.sateOneType == "G")
+//            {
+//                if (antennaData_GPS[antennaData.sateOneNum - 1][0].sateOneNum == 0)
+//                    antennaData_GPS[antennaData.sateOneNum - 1][0] = antennaData;
+//                else if (antennaData_GPS[antennaData.sateOneNum - 1][1].sateOneNum == 0)
+//                    antennaData_GPS[antennaData.sateOneNum - 1][1] = antennaData;
+//                else
+//                    antennaData_GPS[antennaData.sateOneNum - 1][2] = antennaData;          // If more than three will be overlap
+//            }
+//            else if (antennaData.sateOneType == "C")
+//            {
+//                if (antennaData_BDS[antennaData.sateOneNum - 1][0].sateOneNum == 0)
+//                    antennaData_BDS[antennaData.sateOneNum - 1][0] = antennaData;
+//                else if (antennaData_BDS[antennaData.sateOneNum - 1][1].sateOneNum == 0)
+//                    antennaData_BDS[antennaData.sateOneNum - 1][1] = antennaData;
+//                else
+//                    antennaData_BDS[antennaData.sateOneNum - 1][2] = antennaData;          // If more than three will be overlap
+//            }
+//            else if (antennaData.sateOneType == "R")
+//            {
+//                if (antennaData_GLONASS[antennaData.sateOneNum - 1][0].sateOneNum == 0)
+//                    antennaData_GLONASS[antennaData.sateOneNum - 1][0] = antennaData;
+//                else if (antennaData_GLONASS[antennaData.sateOneNum - 1][1].sateOneNum == 0)
+//                    antennaData_GLONASS[antennaData.sateOneNum - 1][1] = antennaData;
+//                else
+//                    antennaData_GLONASS[antennaData.sateOneNum - 1][2] = antennaData;     // If more than three will be overlap
+//            }
+//            else if (antennaData.sateOneType == "E")
+//            {
+//                if (antennaData_Galileo[antennaData.sateOneNum - 1][0].sateOneNum == 0)
+//                    antennaData_Galileo[antennaData.sateOneNum - 1][0] = antennaData;
+//                else if (antennaData_Galileo[antennaData.sateOneNum - 1][1].sateOneNum == 0)
+//                    antennaData_Galileo[antennaData.sateOneNum - 1][1] = antennaData;
+//                else
+//                    antennaData_Galileo[antennaData.sateOneNum - 1][2] = antennaData;     // If more than three will be overlap
+//            }
+//            else
+//                antennaData_Other.push_back(antennaData);                                 // If can not find proper type, save here
+*/
