@@ -1,9 +1,9 @@
 #include "ProductDataCenter.h"
 #include "MyFunctionCenter.h"
-/*------------------ Define static member-------------------------------------------*/
+/*------------------ Define static member------------------------------------------*/
 vector <OceanData> OceanTideFile::allOceanData;
-bool    OceanTideFile::isModeEasy = false;                                           // The default is set to a complex mode
-/*----------------------------------------------------------------------------------*/
+bool    OceanTideFile::isModeEasy = false;                                          // The default is set to a complex mode
+/*---------------------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------------------
  * Name     : readFile
@@ -91,7 +91,7 @@ bool OceanTideFile::readFile(const QString &filePath)
                 oceanData.Height       = 0;
         }
 
-        oceanData.tideData             =  obseveDataPattern;                        // Save array follow the order in header
+        oceanData.tideData             = obseveDataPattern;                         // Save array follow the order in header
         for (int i = 0; i < 6; i++)
         {
             lineQStr                   = OceanFile.readLine();

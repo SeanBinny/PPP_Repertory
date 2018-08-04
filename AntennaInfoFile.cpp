@@ -17,12 +17,12 @@ AntennaData **AntennaInfoFile::antennaData_Galileo = NULL;
 /*------------------------------------------------------------------------------------------*/
 
 
-/*------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------------------
  * Name     : ~AntennaInfoFile
  * Function :  To disconstruct pointer member
  * Input    :  None
  * Output   :  None
- *-----------------------------------------------------------------------------*/
+ *------------------------------------------------------------------------------------------*/
 AntennaInfoFile::~AntennaInfoFile()
 {
     for (int i = 0; i < 32; i++)
@@ -39,12 +39,12 @@ AntennaInfoFile::~AntennaInfoFile()
     delete antennaData_Galileo;
 }
 
-/*------------------------------------------------------------------------------
+/*-------------------------------------------------------------------------------------------
  * Name     : readFile
  * Function : read antenna information file (*.atx)
  * Input    : const QString &filePath
  * Output   : bool (if read success)
- *-----------------------------------------------------------------------------*/
+ *------------------------------------------------------------------------------------------*/
 bool  AntennaInfoFile::readFile(const QString &filePath)                                     // Inherit function
 {
 //    QFileInfo fi;
@@ -139,11 +139,11 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
                     break;
             }
 
-            lineQStr                    = AntennaFile.readLine();   // 自己改的              // START OF FREQUENCY
+            lineQStr                    = AntennaFile.readLine();   // 自己改的               // START OF FREQUENCY
             antennaData.SINEX_CODE      = lineQStr.mid(4,3).toInt();
             antennaData.SINEX_CODE_Type = lineQStr.mid(3,1);
 
-            while ((lineQStr = AntennaFile.readLine()) != "")                              // Skip Comment line
+            while ((lineQStr = AntennaFile.readLine()) != "")                               // Skip Comment line
             {
                 if (!(lineQStr.indexOf("COMMENT") >= 0))
                     break;
@@ -154,46 +154,46 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
             antennaData.F1_NEU[1]       = lineQStr.mid(14, 8).toDouble();
             antennaData.F1_NEU[2]       = lineQStr.mid(22,25).toDouble();
 
-            int row =  1;                                                                  // Get row and col for data
+            int row =  1;                                                                   // Get row and col for data
             if (antennaData.DAZI      != 0.0)
                 row = (int)360 / antennaData.DAZI + 2;
             int col = (int)((antennaData.ZEN2 - antennaData.ZEN1) / antennaData.DZEN + 1);
 
             antennaData.F1_NOAZI.resize(row, col);
             antennaData.F2_NOAZI.resize(row, col);
-            for (int i = 0; i < row; i++)                                                  // Save F1_NOAZI
+            for (int i = 0; i < row; i++)                                                   // Save F1_NOAZI
             {
                 lineQStr = AntennaFile.readLine();
                 for (int j = 0; j < col; j++)
                     antennaData.F1_NOAZI(i, j) = lineQStr.mid(8+j*8, 8).toDouble();
             }
 
-            lineQStr              = AntennaFile.readLine();                                // Skip unuseful line
-            lineQStr              = AntennaFile.readLine();                                // Skip unuseful line
-            lineQStr              = AntennaFile.readLine();                                // Skip unuseful line
+            lineQStr              = AntennaFile.readLine();                                 // Skip unuseful line
+            lineQStr              = AntennaFile.readLine();                                 // Skip unuseful line
+            lineQStr              = AntennaFile.readLine();                                 // Skip unuseful line
             antennaData.F2_NEU[0] = lineQStr.mid(0, 14).toDouble();
             antennaData.F2_NEU[1] = lineQStr.mid(14, 8).toDouble();
             antennaData.F2_NEU[2] = lineQStr.mid(22,25).toDouble();
-            for (int i = 0; i < row; i++)                                                  // Save F1_NOAZI
+            for (int i = 0; i < row; i++)                                                   // Save F1_NOAZI
             {
                 lineQStr = AntennaFile.readLine();
                 for (int j = 0; j < col; j++)
                     antennaData.F2_NOAZI(i, j) = lineQStr.mid(8+j*8, 8).toDouble();
             }
 
-            while ((lineQStr = AntennaFile.readLine()) != "")                              // End a data block of antenna data
+            while ((lineQStr = AntennaFile.readLine()) != "")                               // End a data block of antenna data
             {
                 if (lineQStr.indexOf("END OF ANTENNA") >= 0)
                     break;
             }
 
-            /*----------------------------- Choose tyoe and save -------------------------*/
+            /*----------------------------- Choose tyoe and save --------------------------*/
             if (antennaData.sateOneType == "G")
             {
-                if (antennaData_GPS == NULL)                                               // Set 1D and set NULL
+                if (antennaData_GPS == NULL)                                                // Set 1D and set NULL
                 {
                     antennaData_GPS = new AntennaData *[32];
-                    for (int i = 0; i < 32; i++)                                           // Set 2D
+                    for (int i = 0; i < 32; i++)                                            // Set 2D
                         antennaData_GPS[i] = NULL;
                 }
                 if (antennaData_GPS[antennaData.sateOneNum - 1] == NULL)
@@ -204,7 +204,7 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
                 else if (antennaData_GPS[antennaData.sateOneNum - 1][1].sateOneNum == 0)
                     antennaData_GPS[antennaData.sateOneNum - 1][1] = antennaData;
                 else
-                    antennaData_GPS[antennaData.sateOneNum - 1][2] = antennaData;          // If more than three will be overlap
+                    antennaData_GPS[antennaData.sateOneNum - 1][2] = antennaData;           // If more than three will be overlap
             }
             else if (antennaData.sateOneType == "C")
             {
@@ -240,7 +240,7 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
                 else if (antennaData_GLONASS[antennaData.sateOneNum - 1][1].sateOneNum == 0)
                     antennaData_GLONASS[antennaData.sateOneNum - 1][1] = antennaData;
                 else
-                    antennaData_GLONASS[antennaData.sateOneNum - 1][2] = antennaData;     // If more than three will be overlap
+                    antennaData_GLONASS[antennaData.sateOneNum - 1][2] = antennaData;      // If more than three will be overlap
             }
             else if (antennaData.sateOneType == "E")
             {
@@ -258,10 +258,10 @@ bool  AntennaInfoFile::readFile(const QString &filePath)                        
                 else if (antennaData_Galileo[antennaData.sateOneNum - 1][1].sateOneNum == 0)
                     antennaData_Galileo[antennaData.sateOneNum - 1][1] = antennaData;
                 else
-                    antennaData_Galileo[antennaData.sateOneNum - 1][2] = antennaData;     // If more than three will be overlap
+                    antennaData_Galileo[antennaData.sateOneNum - 1][2] = antennaData;      // If more than three will be overlap
             }
             else
-                antennaData_Other.push_back(antennaData);                                 // If can not find proper type, save here
+                antennaData_Other.push_back(antennaData);                                  // If can not find proper type, save here
         }
    }
    AntennaFile.close();

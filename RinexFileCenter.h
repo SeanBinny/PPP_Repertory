@@ -3,23 +3,28 @@
 #include "FileCenter.h"
 #include "RinexDataCenter.h"
 
+/*---------------------------------------------------------------------
+ * Name     : RinexFileCenter
+ * Function : To deal rinex files of all types and all versions
+ *--------------------------------------------------------------------*/
 class RinexFileCenter
 {
-public :
+public :    
     virtual bool  readObserveFile(ObservationFile &obFile,
-                                  const QString &filePath) = 0;
+                                  const QString &filePath)  = 0;
+    virtual bool  readNavigateFile(ObservationFile &obFile,
+                                   const QString &filePath) = 0;
 
-    static  int   rinex_version(const QString &filePath)                                //
+    static  int   readRinexVersion(const QString &filePath)               // Judge version of current rinex file
     {
         QFile readFile(filePath);
         if(!readFile.open(QIODevice::ReadOnly))
         {
-            QMessageBox::warning(NULL,                   "warning",
+            QMessageBox::warning(NULL,             "warning",
                               "Observation File Open faild!",
                                QMessageBox::Yes, QMessageBox::Yes);
             return false;
         }
-
         QString lineQStr = readFile.readLine();
         double  fVersion = lineQStr.mid(0,20).toDouble();
         int     iVersion = floor(fVersion);
@@ -28,7 +33,13 @@ public :
 };
 
 
-struct Rinex3ObsTypeLibrary
+/*                    ****************************************************                                       */
+/*****************************    Rinex version 3 format  files     **********************************************/
+/*                    ****************************************************                                       */
+/*--------------------------------------------------------------
+ * Function : Provides data help to read version 3 files
+ *-------------------------------------------------------------*/
+struct Rinex3ObsTypeLibrary                         /*only use L1 P1 6*/
 {
     int      numC1, numL1,
              numP2, numL2,
@@ -57,21 +68,27 @@ struct Rinex3ObsTypeLibrary
         delete [] L3_type;
     }
 };
-
+/*---------------------------------------------------------------------
+ * Name     : Rinex3_FileCenter
+ * Function : Provides read functions of all type files in version 3
+ *--------------------------------------------------------------------*/
 class Rinex3_FileCenter : public RinexFileCenter
 {
 public:
-    virtual bool readObserveFile(ObservationFile &obFile,
+    virtual bool readObserveFile(ObservationFile &obFile,              // Read Ofiles
                                  const QString &filePath);
+    virtual bool readNavigateFile(ObservationFile &naFile,
+                                   const QString &filePath) {}
 private:
-    void initialObsTypeLibraty();
-    int *getTypeIndex(QVector<QString> obsTypeOrder,
+    void initialObsTypeLibraty();                                      // Initialize observation types libraty for version 3
+    void getObserveDataInLine(ObservationData &ObsData,                // Split and get data in a line
+                              int typePosArray[9],
+                              QString lineQStr);
+
+    int *getTypeIndex(QVector<QString> obsTypeOrder,                   // Get essential types index of this file's order
                       Rinex3ObsTypeLibrary system,
                       QString *obsTypeOfFile);
-
-public:
-
-
+    int *setTypePos(QString system, int tempPosArray[6]);              // Set all types index in this file
 private:
 
     Rinex3ObsTypeLibrary GPS_ObsTypes;
@@ -81,35 +98,30 @@ private:
     Rinex3ObsTypeLibrary QZSS_ObsTypes;
     Rinex3ObsTypeLibrary SBAS_ObsTypes;
 
-
-    /*------------------- Help read observation -----------------*/
-    int      GPS_ObsTypeIndex[9];                                // Match to the position of the observed value type*/
-    int      BDS_ObsTypeIndex[9];
-    int      GLONASS_ObsTypeIndex[9];
-    int      Galileo_ObsTypeIndex[9];
-    int      QZSS_ObsTypeIndex[9];
-    int      SBAS_ObsTypeIndex[9];
-
-    QString GPS_TYPES[6];       /*For Storing the observed type*/
+    QString GPS_TYPES[6];                                               // Save types show in this files
     QString GLONASS_TYPES[6];
     QString BDS_TYPES[6];
     QString Galileo_TYPES[6];
     QString QZSS_TYPES[6];
     QString SBAS_TYPES[6];
-
-
 };
 
 
-class Rinex2_FileCenter : public RinexFileCenter
-{
-public:
-    virtual bool readObserveFile(ObservationFile &obFile,
-                                 const QString &filePath);
+/*                    ****************************************************                                       */
+/*****************************    Rinex version 3 format  files     **********************************************/
+/*                    ****************************************************                                       */
 
-public:
+//class Rinex2_FileCenter : public RinexFileCenter
+//{
+//public:
+//    virtual bool readObserveFile(ObservationFile &obFile,
+//                                 const QString &filePath);
 
-private:
+//public:
 
-};
+//private:
+
+//};
+
+
 #endif // RENIXFILECENTER_H

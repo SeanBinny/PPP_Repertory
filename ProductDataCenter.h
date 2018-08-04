@@ -47,7 +47,6 @@ public:
 public:
     virtual bool    readFile(const QString &filePath);          // Inherit function
 
-
 private:
     static  int     epochNum;
     static  int     satelliteNum;
@@ -199,15 +198,15 @@ public:
  *-------------------------------------------------------------*/
 struct AntennaData
 {
-    QString  antennaType;                                        // satellite type or Antenna type
+    QString  antennaType;                                        // Satellite type or Antenna type
     QString  COSPAR_ID;                                          // Committee on Space Research
     QString  calibrationMethod;                                  // Save method of calibration
     QString  agencyName;                                         // Name of agency
     MyTime   myTime;                                             // Only use year, month and day
-    QString  sateOneType;                                        // satellite one Type
-    QString  sateTwoType;                                        // satellite two Type
-    int      sateOneNum;                                         // satellite one number
-    int      sateTwoNum;                                         // satellite two number
+    QString  sateOneType;                                        // Satellite one Type
+    QString  sateTwoType;                                        // Satellite two Type
+    int      sateOneNum;                                         // Satellite one number
+    int      sateTwoNum;                                         // Satellite two number
     double   ZEN1;
     double   ZEN2;
     double   DAZI;                                               // Azimuth increment
@@ -228,17 +227,13 @@ struct AntennaData
           DAZI(0.0),      DZEN(0.0),
           VALID_FROM(0.0),VALID_UNTIL(0.0),
           SINEX_CODE(0.0),OF_FREQUENCIES(0.0)
-    {
-
-    }
-
-
+    {}
 };
 /*--------------------------------------------------------------
  * Name     : OceanTideFile
  * Function : Deal and save antenna data
  *-------------------------------------------------------------*/
-class AntennaInfoFile
+class AntennaInfoFile : public FileCenter
 {
 public:
    ~AntennaInfoFile();
@@ -259,5 +254,113 @@ private:
 
 };
 
+/*                    ****************************************************                                       */
+/****************************    IGS weekly solution  Data(*.snx)          ***************************************/
+/*                    ****************************************************                                       */
+/*--------------------------------------------------------------
+ * Function : Save IGS station coordinate data of  station
+ *-------------------------------------------------------------*/
+struct StationCoordData
+{
+    double   date;                                               // Gregory time
+
+    QString  MARKER_NAME;
+    Vector3d obsPos;                                             // Positon of observation
+};
+
+/*--------------------------------------------------------------
+ * Name     : IgsWeeklySolutionFile
+ * Function : Deal and save igs weekly solution data
+ *-------------------------------------------------------------*/
+class IgsWeeklySolutionFile : public FileCenter
+{
+public:
+   ~IgsWeeklySolutionFile(){
+        delete [] weeklySolutionData;}
+    IgsWeeklySolutionFile(){
+        weeklySolutionData = NULL;}
+    virtual bool  readFile(const QString &filePath);            // Inherit function
+public:
+    StationCoordData *weeklySolutionData;
+};
+
+/*                    ****************************************************                                       */
+/****************************    IGS coordiante Data(*.coord)     ************************************************/
+/*                    ****************************************************                                       */
+class IgsStationCoordinateFile : public FileCenter
+{
+public:
+    virtual bool  readFile(const QString &filePath);            // Inherit function
+public:
+    vector <StationCoordData> stationCoordinateData;
+};
+/*                    ****************************************************                                       */
+/****************************    Different Code Bias  Data(*.bsx)          ***************************************/
+/*                    ****************************************************                                       */
+
+/*--------------------------------------------------------------
+ * Function : Save DCB values of GPS GLONASS Galileo BDS
+ *-------------------------------------------------------------*/
+struct DCB_GPS
+{
+    double* C1C_C1W;                                            // DCB values of GPS
+    double* C1C_C2W;
+    double* C2W_C2S;
+    double* C2W_C2L;
+    double* C2W_C2X;
+    double* C1C_C5Q;
+    double* C1C_C5X;
+    double* C1W_C2W;
+    DCB_GPS();
+   ~DCB_GPS();
+};
+
+struct DCB_BDS
+{
+    double* C2I_C7I;                                            // DCB values of BDS
+    double* C2I_C6I;
+    double* C7I_C6I;
+    DCB_BDS();
+   ~DCB_BDS();
+};
+
+struct DCB_GLONASS
+{
+    double* C1C_C1P;                                            // DCB values of GLONASS
+    double* C1C_C2C;
+    double* C1C_C2P;
+    double* C1P_C2P;
+    double* C2C_C2P;
+    DCB_GLONASS();
+   ~DCB_GLONASS();
+};
+struct DCB_GALILEO
+{
+    double* C1C_C5Q;                                            // DCB values of GALILEO*/
+    double* C1X_C5X;
+    double* C1C_C7Q;
+    double* C1X_C7X;
+    double* C1C_C8Q;
+    double* C1X_C8X;
+    DCB_GALILEO();
+   ~DCB_GALILEO();
+};
+/*--------------------------------------------------------------
+ * Name     : DifferentCodeBiasFile
+ * Function : Deal and save different code bias data
+ *-------------------------------------------------------------*/
+class DifferentCodeBiasFile : public FileCenter
+{
+public:
+    virtual bool readFile(const QString &filePath);
+public:
+
+    DCB_GPS     *GPS_DCB;
+    DCB_BDS     *BDS_DCB;
+    DCB_GLONASS *GLONASS_DCB;
+    DCB_GALILEO *GALILEO_DCB;
+    DifferentCodeBiasFile();
+   ~DifferentCodeBiasFile();
+};
 
 #endif // DATACENETR_H

@@ -1,6 +1,7 @@
 #ifndef FILECENTER_H
 #define FILECENTER_H
 #include <qfile.h>
+#include <QTextStream>
 #include <QMessageBox>
 #include <regex>
 
@@ -12,7 +13,7 @@ class FileCenter
 {
 public:
 
-    virtual  bool readFile(const QString &filePath);
+    virtual  bool readFile(const QString &filePath) = 0;
 
              void outputFile();
 
