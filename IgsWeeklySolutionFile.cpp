@@ -18,13 +18,13 @@ bool IgsWeeklySolutionFile::readFile(const QString &filePath)
     }
 
     QString lineQStr = "";
-    while ((lineQStr = weeklyFile.readLine()).indexOf("-SITE/ECCENTRICITY") < 0);
+    while ((lineQStr = weeklyFile.readLine()).indexOf("-SITE/ECCENTRICITY") < 0); // Ignore the unuseful line
     lineQStr         = weeklyFile.readLine();
     lineQStr         = weeklyFile.readLine();
     lineQStr         = weeklyFile.readLine();
 
     int  sum = 0;
-    while((lineQStr  = weeklyFile.readLine()) != "")
+    while((lineQStr  = weeklyFile.readLine()) != "")                              // Get station number
     {
         if (lineQStr.indexOf("-SOLUTION/EPOCHS") >= 0)
             break;
@@ -32,7 +32,7 @@ bool IgsWeeklySolutionFile::readFile(const QString &filePath)
             sum++;
     }
     weeklySolutionData = new StationCoordData[sum];
-    while ((lineQStr = weeklyFile.readLine()).indexOf("+SOLUTION/ESTIMATE") < 0);
+    while ((lineQStr = weeklyFile.readLine()).indexOf("+SOLUTION/ESTIMATE") < 0); // Ignore the unuseful line
 
     int iter = 0;
     while ((lineQStr = weeklyFile.readLine()) !=  "")
