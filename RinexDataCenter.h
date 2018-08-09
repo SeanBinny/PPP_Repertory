@@ -13,7 +13,7 @@ using namespace Eigen;
 /*******************************      Rinex observe file(*.o)    *************************************************/
 /*                    ****************************************************                                       */
 /*--------------------------------------------------------------
- * Function : Save precise orbit data
+ * Function : Save observation data
  *-------------------------------------------------------------*/
 struct ObservationData
 {
@@ -50,7 +50,7 @@ struct ObservationData
 };
 
 /*--------------------------------------------------------------
- * Function : Save single epoch precise orbit data
+ * Function : Save single epoch observation data
  *-------------------------------------------------------------*/
 struct EpochObservationData
 {
@@ -62,13 +62,13 @@ public:
 };
 
 /*--------------------------------------------------------------
- * Name     : PrecisionData
- * Function : Deal and save precise orbit data of all epoch
+ * Name     : ObservationFile
+ * Function : Deal and save observation data of all epoch
  *-------------------------------------------------------------*/
 class ObservationFile : public FileCenter
 {
 public:
-    bool readFile(const QString &filePath);
+    virtual bool readFile(const QString &filePath);
 
 public:
     double   RINEX_VERSION;                                      // RINEX format version number
@@ -110,108 +110,125 @@ public:
 
 
 /*                    ****************************************************                                       */
-/*******************************      Rinex observe file(*.o)    *************************************************/
+/*******************************      Rinex observe file(*.*)    *************************************************/
 /*                    ****************************************************                                       */
 
-//The following section properties are GPS/BDS navigation file sharing section
+/*-----The following section properties are GPS/BDS navigation file sharing section                              */
 struct DataBlockOne
 {
+    double af0;                                                  // The clock offset(sec)
+    double af1;                                                  // The clock rate (sec/sec)
+    double af2;                                                  // The clock acceleration (sec/sec^2)
+ /*...................................Broadcast Track 1..........*/
 
-    double af0;                        //the clock offset(sec)
-    double af1;                        //the clock rate (sec/sec)
-    double af2;                        //the clock acceleration (sec/sec^2)
+    double IODE;/*aode is BDS*/                                  // Age of ephemeris entry (sec)i.e, how long ago was ituploaded
+    double Crs;                                                  // Radius corrections (m)
+    double Delta_n;                                              // Correction to mean motion (radian/sec)
+    double M0;                                                   // Mean anomaly(radians)
+ /*...................................Broadcast Track 2..........*/
 
-                                       //Broadcast Track 1
-    double adoe;                       //age of ephemeris entry (sec)i.e, how long ago was ituploaded
-    double crs;                        //radius corrections (m)
-    double deltan;                     //correction to mean motion (radian/sec)
-    double M0;                         //Mean anomaly(radians)
+    double Cuc;                                                  // Correction to argument in latitude (rad)
+    double ecc;                                                  // Eccentricity
+    double Cus;                                                  // Correction to argument in latitude (rad)
+    double sqrt_a;                                               // Square root of semi-major axis (m^.5)
+ /*...................................Broadcast Track 3..........*/
 
-                                       //Broadcast Track 2
-    double cuc;                        //correction to argument in latitude (rad)
-    double ecc;                        //eccentricity
-    double cus;                        //correction to argument in latitude (rad)
-    double art;                        //square root of semi-major axis (m^.5)
+    double TOE;                                                  // Time of ephemeris
+    double Cic;                                                  // Corrections to inclination
+    double Omega0;                                               // Longitude of the ascending node (rad) (Capital omega)
+    double Cis;                                                  // Corrections to inclination
+ /*...................................Broadcast Track 4..........*/
 
-                                       //Broadcast Track 3
-    double toe;                        //time of ephemeris
-    double cic;                        //corrections to inclination
-    double Omega0;                     //longitude of the ascending node (rad) (Capital omega)
-    double cis;                        //corrections to inclination
+    double i0;                                                   // Inclination (rads)
+    double Crc;                                                  // Radius corrections (m)
+    double omega;                                                // Argument of perigee (rad) (lower case omega)
+    double Omegadot;                                             // Time derivative of longitude of the ascending node(rad/sec)
+ /*...................................Broadcast Track 5..........*/
 
-                                       //Broadcast Track 4
-    double i0;                         //inclination (rads)
-    double crc;                        //radius corrections (m)
-    double omega;                      //argument of perigee (rad) (lower case omega)
-    double Omegadot;                   //time derivative of longitude of the ascending node(rad/sec)
+    double idot;                                                 // Time derivative of inclination (rads/sec)
+    double cflgL2;                                               // Flags (whose meaning is not clear)
+    double weekNum;                                              // GPS Week Number
+    double pflgL2;                                               // Flags (whose meaning is not clear)
+ /*...................................Broadcast Track 6..........*/
 
-                                       //Broadcast Track 5
-    double idot;                       //time derivative of inclination (rads/sec)
-    double cflg12;                     //Flags (whose meaning is not clear)
-    double weekno;                     //GPS Week Number
-    double pflg12;                     //Flags (whose meaning is not clear)
+    double sAccur;                                               // Range accuracy (m)
+    double sHealth;                                              // Satellite health flag
+    double TGD;                                                  // Group delay L2 bias(word 7 subframe 1)
+    double IODC;                                                 // Age of clock parameter upload(sec)
+ /*...................................Broadcast Track 7..........*/
 
-                                       //Broadcast Track 6
-    double svaccur;                    //range accuracy (m)
-    double svhealth;                   //satellite health flag
-    double tgd;                        //Group delay L2 bias(word 7 subframe 1)
-    double aodc;                       //age of clock parameter upload(sec)
-
-                                       //Broadcast Track 7
-    double transmit;                   //Transmission time seconds of GPS week
+    double transmitTime;                                         // Transmission time seconds of GPS week
 };
- //This part of the property below this exclusive GLONASS navigation files
+/*-----The following section properties are GPS/BDS navigation file sharing section                              */
 struct DataBlockTwo
 {
-    double TauN;                       //Satellite clock error (s)
-    double GammaN;                     //Satellite relative frequency deviation
-    double TK;                         //Message frame time (tk)
+    double TauN;                                                 // Satellite clock error (s)
+    double GammaN;                                               // Satellite relative frequency deviation
+    double TK;                                                   // Message frame time (tk)
+ /*...................................Broadcast Track 1..........*/
 
-                                       //Broadcast Track 1
-    double X;                          //Satellite position X (km)
-    double X_dot;                      //Satellite velocity X (X dot) (km / s)
-    double AC_X;                       //Acceleration satellite X direction (km / s2)
-    double Bn;                         //Satellite health status (0 = OK) (Bn)
+    double X;                                                    // Satellite position X (km)
+    double X_dot;                                                // Satellite velocity X (X dot) (km / s)
+    double AC_X;                                                 // Acceleration satellite X direction (km / s2)
+    double Bn;                                                   // Satellite health status (0 = OK) (Bn)
+ /*...................................Broadcast Track 1..........*/
 
-                                       //Broadcast Track 2
-    double Y;                          //Satellite position Y (km)
-    double Y_dot;                      //Satellite velocity Y (Y dot) (km / s)
-    double AC_Y;                       //Acceleration satellite Y direction (km / s2)
-    int K;                             //Satellite frequency number (1 to 24)
+    double Y;                                                    // Satellite position Y (km)
+    double Y_dot;                                                // Satellite velocity Y (Y dot) (km / s)
+    double AC_Y;                                                 // Acceleration satellite Y direction (km / s2)
+    int    K;                                                    // Satellite frequency number (1 to 24)
+ /*...................................Broadcast Track 1..........*/
 
-                                       //Broadcast Track 3
-    double Z;                          //Satellite position Z (km)
-    double Z_dot;                      //Satellite velocity Z (Z dot) (km / s)
-    double AC_Z;                       //Z direction acceleration satellite (km / s2)
-    double E;                          //Run life information (days) (E)
+    double Z;                                                    // Satellite position Z (km)
+    double Z_dot;                                                // Satellite velocity Z (Z dot) (km / s)
+    double AC_Z;                                                 // Z direction acceleration satellite (km / s2)
+    double E;                                                    // Run life information (days) (E)
 };
-
-struct epochNavigationData
+/*--------------------------------------------------------------
+ * Function : Save single epoch navigation data
+ *-------------------------------------------------------------*/
+struct EpochNavigationData
 {
 public:
-    epochNavigationData();
-   ~epochNavigationData();
-
-    QString sats;                      //the type and the PRN number of satellite
-    int     PRN;                       //the PRN number of satellite
-                                       //year,month,day,hour,minute,second is the epoch to
-                                       //which the clock parameters follow apply
+    EpochNavigationData()
+        :dataOnePtr(NULL), dataTwoPtr(NULL){}
+//   ~EpochNavigationData()
+//    {   delete dataOnePtr;
+//        delete dataTwoPtr;}
+    QString satType;                                             // System type of satellite
+    int     PRN;                                                 // The PRN number of satellite
     MyTime  myTime;
-    void   *dataPtr;                    // point to block one or two
+
+    DataBlockOne  *dataOnePtr;                                   // The pointer point to data block one or two
+    DataBlockTwo  *dataTwoPtr;
 };
 
-
-class NavigationFile
+/*--------------------------------------------------------------
+ * Name     : NavigationFile
+ * Function : Deal and save navigation data of all epoch
+ *-------------------------------------------------------------*/
+class NavigationFile :  public FileCenter
 {
-    QVector < QVector< epochNavigationData> >  Gps; /*In order to store navigation file information*/
-    QVector < QVector< epochNavigationData> >  r;          //  看看是不是 一共40个空；
+public:
+    virtual bool readFile(const QString &filePath);
+    void saveNavDataToArray(const EpochNavigationData &navData);// Can be use to push data into srray
 
-    int K[30];                                            /*Satellite frequency number (1 to 24)(GLONASS)*/
-    QString navtype;
-    QString clocktype;
+public:
+    QVector < QVector< EpochNavigationData> >  GPS;              // In order to store navigation file information
+    QVector < QVector< EpochNavigationData> >  BDS;
+    QVector < QVector< EpochNavigationData> >  GLONASS;
+    QVector < QVector< EpochNavigationData> >  GALILEO;
+    QVector < QVector< EpochNavigationData> >  QZSS;
+    QVector < QVector< EpochNavigationData> >  SBAS;
+    QVector < QVector< EpochNavigationData> >  IRNSS;
 
-    QString troptype;
-    QString Tropospheric_Model;
-    QString Tropospheric_Mapping_Function;
+    int K[30];                                                   // Satellite frequency number (1 to 24)(GLONASS)*/
+
+//    QString navtype;
+//    QString clocktype;
+
+//    QString troptype;
+//    QString Tropospheric_Model;
+//    QString Tropospheric_Mapping_Function;
 };
 #endif // RINEXDATACENTER_H

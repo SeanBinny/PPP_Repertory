@@ -1,5 +1,11 @@
 #include "ProductDataCenter.h"
 
+/*------------------------------------------------------------------------------
+ * Name     : readFile
+ * Function : read igs station coordinate file (*.coord)
+ * Input    : const QString &filePath
+ * Output   : bool (if read success)
+ *-----------------------------------------------------------------------------*/
 bool IgsStationCoordinateFile::readFile(const QString &filePath)
 {
     QFile staCoordfile(filePath);
@@ -25,7 +31,6 @@ bool IgsStationCoordinateFile::readFile(const QString &filePath)
 
         stationCoordinateData.push_back(staCoordData);
     }
-
 
     staCoordfile.close();
     return true;

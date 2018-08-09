@@ -52,4 +52,5 @@ bool IgsWeeklySolutionFile::readFile(const QString &filePath)
 
     }
     weeklyFile.close();
+    return true;
 }

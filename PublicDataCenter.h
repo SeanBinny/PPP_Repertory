@@ -1,8 +1,8 @@
 #ifndef PUBLICDATACENTER_H
 #define PUBLICDATACENTER_H
-
-#define JDtoMJD 2400000.5
-#define C       299792458                                        // Velocity of light
+#include "GlobalDefinationCenter.h"
+//#define JDtoMJD 2400000.5
+//#define C       299792458                                        // Velocity of light
 
 /*                    ****************************************************                                       */
 /*******************************         Public  Data           **************************************************/

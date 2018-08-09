@@ -2,10 +2,10 @@
 #include "RinexFileCenter.h"
 
 
-/*--------------------------------------------------------------
+/*------------------------------------------------------------------------------
  * Name     : ObservationData
  * Function : Constructor of class ObservationData
- *-------------------------------------------------------------*/
+ *-----------------------------------------------------------------------------*/
 ObservationData::ObservationData()
 {
     PRN           =  0,  sateClock     =  0, extraTime     =  0;
@@ -19,34 +19,24 @@ ObservationData::ObservationData()
     tropWetDelayFunc    =  0;
 }
 
-/*------------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
  * Name     : readFile
  * Function : Dynamically judging version and reading observe file (*.o)
  * Input    : const QString &filePath
  * Output   : bool (if read success)
- *-----------------------------------------------------------------------------------*/
+ *-----------------------------------------------------------------------------*/
 bool ObservationFile::readFile(const QString &filePath)
 {
-    QFile ObserveFile(filePath);
-    if(!  ObserveFile.open( QIODevice::ReadOnly ))
-    {
-          QMessageBox::warning(NULL,                   "warning",
-                              "Observation File Open faild!",
-                               QMessageBox::Yes, QMessageBox::Yes);
-          return false;
-    }
-
-    int version = RinexFileCenter::readRinexVersion(filePath);                        // Judge version
-    RinexFileCenter *rinexFilePtr = NULL;                                             // Dynamically reading file
-//    if (version == 2)
-//        rinexFilePtr = new Rinex2_FileCenter;
+    int version = RinexFileCenter::readRinexVersion(filePath);                  // Judge version
+    RinexFileCenter *rinexFilePtr = NULL;                                       // Dynamically reading file
+    if (version == 2)
+        rinexFilePtr = new Rinex2_FileCenter;
     if (version == 3)
         rinexFilePtr = new Rinex3_FileCenter;
 
     rinexFilePtr->readObserveFile(*this, filePath);
 
     delete rinexFilePtr;
-    ObserveFile.close();
     return true;
 }
 
@@ -420,11 +410,14 @@ bool Rinex3_FileCenter::readObserveFile(ObservationFile &obsFile,
     return true;
 }
 
+/*                    ****************************************************                                       */
+/*******************************    Rinex version 2 format files     *********************************************/
+/*                    ****************************************************                                       */
 
-
-
-
-
+bool Rinex2_FileCenter::readObserveFile(ObservationFile &obFile, const QString &filePath)
+{
+        return true;
+}
 
 
 

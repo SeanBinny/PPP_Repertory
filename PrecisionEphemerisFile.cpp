@@ -85,7 +85,7 @@ bool PrecisionEphemerisFile::readFile(const QString &filePath)
             epochData.myTime.EPT.second = stod(helpStr);
 
             epochData.myTime = MyFuncionCenter::timeIntegrator(epochData.myTime.EPT);
-            epochData.accumulateGpsSec   += timeTrans;                                 // Convert accumulate GPS Time to BDS Time
+            epochData.accumulateGpsSec += timeTrans;                                   // Convert accumulate GPS Time to BDS Time
 
             /* moon and sun correction
             m_time t1=GPS2UTC(t);
