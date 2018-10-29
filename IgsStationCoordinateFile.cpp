@@ -6,22 +6,16 @@
  * Input    : const QString &filePath
  * Output   : bool (if read success)
  *-----------------------------------------------------------------------------*/
-bool IgsStationCoordinateFile::readFile(const QString &filePath)
+bool IgsStationCoordinateFile::readFile()
 {
-    QFile staCoordfile(filePath);
-    if(!staCoordfile.open(QIODevice::ReadOnly))
-    {
-          QMessageBox::warning(NULL,                          "warning",
-                              "IGS station coordinate file open faild!",
-                               QMessageBox::Yes, QMessageBox::Yes);
-          return false;
-    }
+    if (!fileCommonDeal("IGS station coordinate file open faild!"))
+        return false;
+    QTextStream inText(&inFile);
 
-    QTextStream txtInput(&staCoordfile);
-    while(!txtInput.atEnd())
+    while(!inText.atEnd())
     {
         StationCoordData staCoordData;
-        QString     lineQStr     = txtInput.readLine();
+        QString     lineQStr     = inText.readLine();
         QStringList strList      = lineQStr.simplified().split(",");
         staCoordData.date        = strList.at(0).toInt();
         staCoordData.MARKER_NAME = strList.at(1);
@@ -32,6 +26,6 @@ bool IgsStationCoordinateFile::readFile(const QString &filePath)
         stationCoordinateData.push_back(staCoordData);
     }
 
-    staCoordfile.close();
+    closeFile();
     return true;
 }

@@ -3,24 +3,18 @@
 /*----------------------------------------------------------------------------
  * Name     : readFile
  * Function : read different code bias file (*.bsx)
- * Input    : const QString &filePath
+ * Input    : NULL
  * Output   : bool (if read success)
  *--------------------------------------------------------------------------*/
-bool DifferentCodeBiasFile::readFile(const QString &filePath)
+bool DifferentCodeBiasFile::readFile()
 {
-    QFile DCBFile(filePath);
-    if(!  DCBFile.open( QIODevice::ReadOnly ))
-    {
-          QMessageBox::warning(NULL,                        "warning",
-                              "Differernt Code Bias file open faild!",
-                               QMessageBox::Yes, QMessageBox::Yes);
-          return false;
-    }
-
+    if (!fileCommonDeal("Differernt Code Bias file open faild!"))
+        return false;
+    QTextStream inText(&inFile);
     QString lineQStr  = "";
-    while ((lineQStr  = DCBFile.readLine()).indexOf("+BIAS/SOLUTION") < 0);    // Ignore the unuseful line
+    while ((lineQStr  = inText.readLine()).indexOf("+BIAS/SOLUTION") < 0);    // Ignore the unuseful line
     /*-----------------------  Read data ------------------------------------*/
-    while ((lineQStr  = DCBFile.readLine()) != "")
+    while ((lineQStr  = inText.readLine()) != "")
     {
        if (lineQStr.mid(1, 3) == "DCB")
        {
@@ -30,7 +24,7 @@ bool DifferentCodeBiasFile::readFile(const QString &filePath)
            QString system    = lineQStr.mid(6,  1);
            int     prnNum    = lineQStr.mid(12, 2).toInt();
            int     doy       = lineQStr.mid(43, 3).toInt();
-           double  tempData  = lineQStr.mid(71,21).toDouble()*10E-10 * C;      // Extract data from the line
+           double  tempData  = lineQStr.mid(71,21).toDouble()*10E-10 * LIGHT_V;// Extract data from the line
            if      (system  == "G")
            {
                 if (GPS_DCB == NULL)
@@ -97,7 +91,7 @@ bool DifferentCodeBiasFile::readFile(const QString &filePath)
            }
        }
     }
-    DCBFile.close();
+    closeFile();
     return true;
 }
 

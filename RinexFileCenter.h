@@ -12,14 +12,14 @@ class RinexFileCenter
 {
 public :    
     virtual bool  readObserveFile (ObservationFile &obFile,
-                                   const QString &filePath) = 0;
-    virtual bool  readNavigateFile(NavigationFile &naFile,
-                                   const QString &filePath) = 0;
+                                   const QString   &filePath) = 0;
+    virtual bool  readNavigateFile(NavigationFile  &naFile,
+                                   const QString   &filePath) = 0;
 
     static  int   readRinexVersion(const QString &filePath)              // Judge version of current rinex file
     {
         QFile readFile(filePath);
-        if(!readFile.open(QIODevice::ReadOnly))
+        if (!readFile.open(QIODevice::ReadOnly))
         {
             QMessageBox::warning(NULL,             "warning",
                               "Observation File Open faild!",
@@ -32,7 +32,7 @@ public :
         return  iVersion;
     }
 
-    static QString readRinexType(const QString &filePath)                // Be used to get the type of file
+    static  QString readRinexType (const QString &filePath)              // Be used to get the type of file
     {
 
         QFileInfo fileInfo =  QFileInfo(filePath);
@@ -61,14 +61,15 @@ public :
         return systemType;
     }
 protected:
+
     virtual bool readTypeOneNavFile  (const QString  &filePath,          // Function to read (*.n) (*.c) (*.l) (*.q)
                                       const QString  &system,
-                                      NavigationFile &naFile) = 0;
+                                     NavigationFile  &naFile) = 0;
     virtual bool readTypeTwoNavFile  (const QString  &filePath,          // Function to read (*.g) (*.h)
                                       const QString  &system,
-                                      NavigationFile &naFile) = 0;
+                                     NavigationFile  &naFile) = 0;
     virtual bool readTypeMixedNavFile(const QString  &filePath,          // Function to read (*.p)
-                                      NavigationFile &naFile) = 0;
+                                     NavigationFile  &naFile) = 0;
 };
 
 
@@ -140,9 +141,9 @@ protected:
     virtual bool readTypeMixedNavFile(const QString  &filePath,          // Function to read (*.p)
                                       NavigationFile &naFile);
 private:
-    void readTypeOneData(QFile &inFile, QString &lineQStr,
+    void readTypeOneData(QTextStream &inText, QString &lineQStr,
                          EpochNavigationData &navData);
-    void readTypeTwoData(QFile &inFile, QString &lineQStr,
+    void readTypeTwoData(QTextStream &inText, QString &lineQStr,
                          EpochNavigationData &navData);
 
 private:
@@ -172,9 +173,9 @@ class Rinex2_FileCenter : public RinexFileCenter
 {
 public:
     virtual bool readObserveFile (ObservationFile &obFile,
-                                  const QString &filePath);
-    virtual bool readNavigateFile(NavigationFile &naFile,
-                                  const QString &filePath) {}
+                                  const QString   &filePath);
+    virtual bool readNavigateFile(NavigationFile  &naFile,
+                                  const QString   &filePath) {}
 
 protected:
 

@@ -1,6 +1,6 @@
 #include "RinexDataCenter.h"
 #include "RinexFileCenter.h"
-
+#include "MyFunctionCenter.h"
 
 /*------------------------------------------------------------------------------
  * Name     : ObservationData
@@ -8,15 +8,9 @@
  *-----------------------------------------------------------------------------*/
 ObservationData::ObservationData()
 {
-    PRN           =  0,  sateClock     =  0, extraTime     =  0;
-    frquencyNum_R =  0,  Delta0        =  0, Delta1        =  0;
-    Delta2        =  0,  C1 = P1 = L1  =  0, C2 = P2 = L2  =  0;
-    C3 = P3 = L3  =  0,  phaseWinding  =  0, tropDryDelay  =  0;
-    tideCorre     =  0,  anteHeight    =  0, sagnacEffect  =  0;
-    flagOfValid   =  0;
-    relativityEffect    =  0;
-    anteCenterCorre     =  0;
-    tropWetDelayFunc    =  0;
+    C1 = P1 = L1  =  0;
+    C2 = P2 = L2  =  0;
+    C3 = P3 = L3  =  0;
 }
 
 /*------------------------------------------------------------------------------
@@ -25,7 +19,7 @@ ObservationData::ObservationData()
  * Input    : const QString &filePath
  * Output   : bool (if read success)
  *-----------------------------------------------------------------------------*/
-bool ObservationFile::readFile(const QString &filePath)
+bool ObservationFile::readFile()
 {
     int version = RinexFileCenter::readRinexVersion(filePath);                  // Judge version
     RinexFileCenter *rinexFilePtr = NULL;                                       // Dynamically reading file
@@ -117,7 +111,7 @@ int *Rinex3_FileCenter::getTypeIndex(QVector<QString> obsTypeOrder,
 
     QString *helpType    = NULL;                                                // Type selection  helper
     int      helpNum     = 0;                                                   // Number of loop helper
-    for (int type = 0; type <  6; type ++)                                      // Type loop
+    for (int type = 0; type < 6; type ++)                                       // Type loop
     {
         helpType  = NULL, helpNum = 0;
         /*----------------------  Get type ------------------------------------*/
@@ -140,7 +134,7 @@ int *Rinex3_FileCenter::getTypeIndex(QVector<QString> obsTypeOrder,
             {
                 if(obsTypeOrder[j].indexOf(helpType[k]) >= 0)
                 {
-                   resTypeIndex[type]  = j;
+                   resTypeIndex [type] = j;
                    obsTypeOfFile[type] = obsTypeOrder[j];
                    break;
                 }
@@ -192,7 +186,7 @@ int *Rinex3_FileCenter::setTypePos(QString system, int tempPosArray[6])
 void Rinex3_FileCenter::getObserveDataInLine(ObservationData &ObsData,
                                              int typePosArray[9], QString lineQStr)
 {
-    ObsData.PRN = lineQStr.mid(1,2).toInt();                                    // Get satellite number
+    ObsData.satTN.PRN = lineQStr.mid(1,2).toInt();                              // Get satellite number
     for (int type = 0; type < 9; type++)                                        // Get satellite type
     {
         if (typePosArray[type] == -1)                                           // If not find
@@ -238,6 +232,7 @@ bool Rinex3_FileCenter::readObserveFile(ObservationFile &obsFile,
                                QMessageBox::Yes, QMessageBox::Yes);
           return false;
     }
+    QTextStream inText(&obsInFile);
 
     /*--------------------------------------------------------------------------*/
     int  *GPS_ObsTypeIndex     = NULL;                                           // Use as 1x9 array to save
@@ -250,7 +245,6 @@ bool Rinex3_FileCenter::readObserveFile(ObservationFile &obsFile,
     int  *tempObsTyoeIndex     = NULL;                                           // Use as 1x6 array to save
                                                                                  // 0, 1, 2, 3, 4, 5
     /*-------------------------------------------------------------------------*/// C1 L1 P2 L2 P3 L3
-
 
     initialObsTypeLibraty();                                                     // Initialize observation types libraty
     /*-----------------------------   Read  Head -------------------------------*/
@@ -294,7 +288,7 @@ bool Rinex3_FileCenter::readObserveFile(ObservationFile &obsFile,
 
             if (obsTypeNum > 13)
             {
-                lineQStr  = obsInFile.readLine();
+                lineQStr  = inText.readLine();
                 for(int n = 0; n < obsTypeNum - 13; n++)
                     obsTypeOrder.push_back(lineQStr.mid(7+4*n, 3));
             }
@@ -302,9 +296,9 @@ bool Rinex3_FileCenter::readObserveFile(ObservationFile &obsFile,
             if(system == "G")
             {
                 obsFile.GPS_ObserveNum  = obsTypeNum;
-                tempObsTyoeIndex       = getTypeIndex(obsTypeOrder, GPS_ObsTypes,
-                                                      GPS_TYPES);
-                GPS_ObsTypeIndex       = setTypePos(system, tempObsTyoeIndex);
+                tempObsTyoeIndex        = getTypeIndex(obsTypeOrder, GPS_ObsTypes,
+                                                       GPS_TYPES);
+                GPS_ObsTypeIndex        = setTypePos(system, tempObsTyoeIndex);
             }
             else if(system == "C")
             {
@@ -345,12 +339,12 @@ bool Rinex3_FileCenter::readObserveFile(ObservationFile &obsFile,
         if (lineQStr.indexOf("INTERVAL") >= 0)
             obsFile.INTERVAL            = lineQStr.mid(3,8).toDouble();
 
-        lineQStr = obsInFile.readLine();
+        lineQStr = inText.readLine();
     }
     while (lineQStr.indexOf("END OF HEADER") < 0);
 
     /*-----------------------------   Read  Data -------------------------------*/
-    while ((lineQStr = obsInFile.readLine()) != "")
+    while ((lineQStr = inText.readLine()) != "")
     {
         if (lineQStr.mid(31,1).toInt() == 0)
         {
@@ -364,27 +358,34 @@ bool Rinex3_FileCenter::readObserveFile(ObservationFile &obsFile,
 
             epochData.sateNum           = lineQStr.mid(33, 2).toInt();
 
+            epochData.myTime            = MyFunctionCenter::timeIntegrator(epochData.myTime);
             /*---------------  Choose system and save data ---------------------*/
             for (int n = 0; n < epochData.sateNum; n++)
             {
-                lineQStr         = obsInFile.readLine();
+                lineQStr           = inText.readLine();
                 ObservationData obsData;
-                obsData.sateType = lineQStr.mid(0,1);
-                if (obsData.sateType == " ")
-                    obsData.sateType =  "G";
+                obsData.satTN.Type = lineQStr.mid(0,1);
+                if (obsData.satTN.Type == " ")
+                    obsData.satTN.Type =  "G";
 
-                if (obsData.sateType == "G")
+                if      (obsData.satTN.Type == "G"){
                     getObserveDataInLine(obsData, GPS_ObsTypeIndex, lineQStr);
-                else if (obsData.sateType == "C")
+                    epochData.GPS_Num++;}
+                else if (obsData.satTN.Type == "C"){
                     getObserveDataInLine(obsData, BDS_ObsTypeIndex, lineQStr);
-                else if (obsData.sateType == "R")
+                    epochData.BDS_Num++;}
+                else if (obsData.satTN.Type == "R"){
                     getObserveDataInLine(obsData, GLONASS_ObsTypeIndex, lineQStr);
-                else if (obsData.sateType == "E")
+                    epochData.GLONASS_Num++;}
+                else if (obsData.satTN.Type == "E"){
                     getObserveDataInLine(obsData, Galileo_ObsTypeIndex, lineQStr);
-                else if (obsData.sateType == "J")
+                    epochData.Galileo_Num++;}
+                else if (obsData.satTN.Type == "J"){
                     getObserveDataInLine(obsData, QZSS_ObsTypeIndex, lineQStr);
-                else if (obsData.sateType == "S")
+                    epochData.QZSS_Num++;}
+                else if (obsData.satTN.Type == "S"){
                     getObserveDataInLine(obsData, SBAS_ObsTypeIndex, lineQStr);
+                    epochData.SBAS_Num++;}
 
                 epochData.epochObserveData.push_back(obsData);
             }
@@ -394,7 +395,7 @@ bool Rinex3_FileCenter::readObserveFile(ObservationFile &obsFile,
         {
             int  ignoreRow = lineQStr.mid(33,2).toInt();
             for (int r = 0; r < ignoreRow; r++)
-                 lineQStr  = obsInFile.readLine();
+                 lineQStr  = inText.readLine();
         }
     }
     delete tempObsTyoeIndex;
@@ -416,72 +417,8 @@ bool Rinex3_FileCenter::readObserveFile(ObservationFile &obsFile,
 
 bool Rinex2_FileCenter::readObserveFile(ObservationFile &obFile, const QString &filePath)
 {
-        return true;
+    obFile.ANT =""; QString s = filePath; s = "";
+    return true;
 }
 
 
-
-
-
-//            temp1.julday=julday(temp1.epoch_time[0],temp1.epoch_time[1],temp1.epoch_time[2],
-            //temp1.epoch_time[3]+temp1.epoch_time[4]/60+temp1.epoch_time[5]/3600);
-//            gps_time(temp1.julday,temp1.week, temp1.gpst);
-//            m_time t;
-//            t.julday=temp1.julday;
-//            check_time(t);
-//            temp1.mjd=t.mjulday;
-//             temp1.doy=doy(temp1.epoch_time[0],temp1.epoch_time[1],temp1.epoch_time[2]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*     QFileInfo fi;
-    fi = QFileInfo(path_file);
-    QFile readfile(path_file);
-    if(!readfile.open(QIODevice::ReadOnly))
-    {
-        qDebug()<<"can't open "<<endl;
-        exit(EXIT_FAILURE);
-    }
-    observe[i].pathname=fi.absolutePath();
-
-    QString pt=observe[i].pathname+"/result";
-    observe[i].pathname=observe[i].pathname+"/result/";
-    //Create output folders
-    QDir *mp = new QDir;
-    bool exist = mp->exists(pt);
-    if(!exist)
-    {
-        bool ok=mp->mkdir(pt);
-        if(!ok)
-        {
-            QMessageBox mes;
-            mes.setText("Create a file failed!");
-            mes.exec();
-        }
-    }
-    QString station=fi.fileName();
-    int pos=station.indexOf('.');
-    observe[i].station=station.mid(0,pos);
-    QTextStream str(&readfile);
-    QString line;
-    QString rec="";
-    line=str.readLine();
-*/

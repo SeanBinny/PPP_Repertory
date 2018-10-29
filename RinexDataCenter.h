@@ -17,35 +17,10 @@ using namespace Eigen;
  *-------------------------------------------------------------*/
 struct ObservationData
 {
-    int     PRN;                                                 // Satellite Number
-    int     frquencyNum_R;                                       // Frequency number of GLONASS Satellite
-    QString sateType;                                            // Satellite Type
-    double  sateClock;                                           // Clock errors
-    double  extraTime;                                           // Extrapolation time
+    Sat_TypePrn satTN;                                           // Satellite Type and Satellite Number
     double  C1, P1, L1;                                          // Observation data (C, L, P)
     double  C2, P2, L2;
     double  C3, P3, L3;
-
-
-    double sateVel[3];                                           // The velocity of the satellite
-    double satePos[3];                                           // Satellite coordinates
-    double coord_DAE[3];                                         // Storage distance, azimuth, elevation angle
-    double anteCenterOffset[2];                                  // Receiver antenna phase center offset correction
-    double tideCorre;                                            // Tidal correction
-    double anteHeight;                                           // Antenna height correction
-    double sagnacEffect;                                         // Sagnac effection
-    double relativityEffect;                                     // Relativity effection
-    double anteCenterCorre;                                      // Satellite antenna phase center deviation correction
-    double phaseWinding;                                         // Phase winding correction
-    double tropDryDelay;                                         // Tropospheric delay (dry weight)
-    double tropWetDelayFunc;                                     // Tropospheric wet delay projection function
-    double flagOfValid;                                          // To determine whether the Satellite can be used
-
-
-    double Delta0; /* Unknown */                                 // This is calculated to PPP*/
-    double Delta1;
-    double Delta2;
-
     ObservationData();
 };
 
@@ -58,7 +33,17 @@ public:
 
     MyTime  myTime;                                              // Storage Standard Time
     int     sateNum;                                             // The number of satellites
+    int     GPS_Num;
+    int     BDS_Num;
+    int     GLONASS_Num;
+    int     Galileo_Num;
+    int     QZSS_Num;
+    int     SBAS_Num;
     vector <ObservationData> epochObserveData;                   // To save observation data in an epoch
+    EpochObservationData()
+        : sateNum(0),     GPS_Num(0),     BDS_Num(0),
+          GLONASS_Num(0), Galileo_Num(0), QZSS_Num(0),
+          SBAS_Num(0){}
 };
 
 /*--------------------------------------------------------------
@@ -68,7 +53,9 @@ public:
 class ObservationFile : public FileCenter
 {
 public:
-    virtual bool readFile(const QString &filePath);
+    virtual bool readFile();
+    virtual void setFilePath(const QString &FilePath){
+                 filePath = FilePath;}
 
 public:
     double   RINEX_VERSION;                                      // RINEX format version number
@@ -78,10 +65,11 @@ public:
     QString  REC_TYPE;                                           // Receiver Ttpe
     QString  ANT;                                                // Antenna serial number
     QString  ANT_TYPE;                                           // Antenna Type
+    QString  navigationType;
     double   APPROX_POSITION[3];                                 // Receiver outline coordinate
-    double   ANTENNA_DELTA_H;                                    // Antenna height: above the mark at the height of the antenna surface*/
-    double   ANTENNA_DELTA_E;                                    // Antenna center eccentric relative to the mark-up in the East*/
-    double   ANTENNA_DELTA_N;                                    // Center of the antenna relative to the mark-up in the North eccentric*/
+    double   ANTENNA_DELTA_H;                                    // Antenna height: above the mark at the height of the antenna surface
+    double   ANTENNA_DELTA_E;                                    // Antenna center eccentric relative to the mark-up in the East
+    double   ANTENNA_DELTA_N;                                    // Center of the antenna relative to the mark-up in the North eccentric
     double   TYPES_NUMBER;                                       // Number of types
     double   INTERVAL;                                           // Sampling rate
 
@@ -92,9 +80,8 @@ public:
     int      QZSS_ObserveNum;
     int      SBAS_ObserveNum;
 
-    QString pathname;  /* unknown*/ /*Output path*/
 
-    QVector <EpochObservationData> AllObservationData;           // Data stored for all epoch
+    vector <EpochObservationData> AllObservationData;            // Data stored for all epoch
     ObservationFile()
     {
         RINEX_VERSION   = 0, ANTENNA_DELTA_H = 0;
@@ -106,11 +93,12 @@ public:
         Galileo_ObserveNum = 0;
 
     }
+
 };
 
 
 /*                    ****************************************************                                       */
-/*******************************      Rinex observe file(*.*)    *************************************************/
+/*******************************      Rinex navigation file(*.*)    **********************************************/
 /*                    ****************************************************                                       */
 
 /*-----The following section properties are GPS/BDS navigation file sharing section                              */
@@ -192,13 +180,9 @@ struct EpochNavigationData
 public:
     EpochNavigationData()
         :dataOnePtr(NULL), dataTwoPtr(NULL){}
-//   ~EpochNavigationData()
-//    {   delete dataOnePtr;
-//        delete dataTwoPtr;}
-    QString satType;                                             // System type of satellite
-    int     PRN;                                                 // The PRN number of satellite
-    MyTime  myTime;
 
+    Sat_TypePrn    satTN;
+    MyTime         myTime;
     DataBlockOne  *dataOnePtr;                                   // The pointer point to data block one or two
     DataBlockTwo  *dataTwoPtr;
 };
@@ -210,25 +194,21 @@ public:
 class NavigationFile :  public FileCenter
 {
 public:
-    virtual bool readFile(const QString &filePath);
-    void saveNavDataToArray(const EpochNavigationData &navData);// Can be use to push data into srray
+    virtual bool readFile();
+    virtual void setFilePath(const QString &FilePath){
+                 filePath = FilePath;}
+    void saveNavDataToArray(const EpochNavigationData &navData); // Can be use to push data into srray
 
 public:
-    QVector < QVector< EpochNavigationData> >  GPS;              // In order to store navigation file information
-    QVector < QVector< EpochNavigationData> >  BDS;
-    QVector < QVector< EpochNavigationData> >  GLONASS;
-    QVector < QVector< EpochNavigationData> >  GALILEO;
-    QVector < QVector< EpochNavigationData> >  QZSS;
-    QVector < QVector< EpochNavigationData> >  SBAS;
-    QVector < QVector< EpochNavigationData> >  IRNSS;
+    vector < vector< EpochNavigationData> >  GPS;                // In order to store navigation file information
+    vector < vector< EpochNavigationData> >  BDS;
+    vector < vector< EpochNavigationData> >  GLONASS;
+    vector < vector< EpochNavigationData> >  GALILEO;
+    vector < vector< EpochNavigationData> >  QZSS;
+    vector < vector< EpochNavigationData> >  SBAS;
+    vector < vector< EpochNavigationData> >  IRNSS;
 
     int K[30];                                                   // Satellite frequency number (1 to 24)(GLONASS)*/
 
-//    QString navtype;
-//    QString clocktype;
-
-//    QString troptype;
-//    QString Tropospheric_Model;
-//    QString Tropospheric_Mapping_Function;
 };
 #endif // RINEXDATACENTER_H

@@ -1,7 +1,6 @@
 #include "ProductDataCenter.h"
 #include "MyFunctionCenter.h"
 /*------------------ Define static member------------------------------------------*/
-vector <OceanData> OceanTideFile::allOceanData;
 bool    OceanTideFile::isModeEasy = false;                                          // The default is set to a complex mode
 /*---------------------------------------------------------------------------------*/
 
@@ -11,23 +10,15 @@ bool    OceanTideFile::isModeEasy = false;                                      
  * Input    : const QString &filePath
  * Output   : bool (if read success)
  *-----------------------------------------------------------------------------*/
-bool OceanTideFile::readFile(const QString &filePath)
+bool OceanTideFile::readFile()
 {
-    QFile OceanFile(filePath);
-    if (! OceanFile.open( QIODevice::ReadOnly))
-    {
-          QMessageBox::warning(NULL,              "warning",
-                              "Ocean tide File Open faild!",
-                               QMessageBox::Yes, QMessageBox::Yes);
-          return false;
-    }
-
-
+    fileCommonDeal("Ocean tide File Open faild!");
+    QTextStream inText(&inFile);
     QString lineQStr   = "";
     int observeTypeNum =  0;
     vector <ObserveData> obseveDataPattern;                                          // A pattern to save type by an order
     /*---------------- Read header --------------------------------------------------*/
-    while ((lineQStr = OceanFile.readLine()) != "")
+    while ((lineQStr = inText.readLine()) != "")
     {
         if (lineQStr.indexOf("COLUMN ORDER") >= 0)
         {            
@@ -36,7 +27,7 @@ bool OceanTideFile::readFile(const QString &filePath)
             for (int i = 0; i < observeTypeNum; i++)
             {
                 ObserveData obdata;
-                obdata.observeType = lineQStr.mid(16 + 4*i, 4).trimmed();            // Get type of observe value
+                obdata.observeType = lineQStr.mid(16 + 4*i, 4).trimmed();            // Get tidal wave
                 obseveDataPattern.push_back(obdata);
             }
         }
@@ -44,12 +35,12 @@ bool OceanTideFile::readFile(const QString &filePath)
             break;
     }
     /*---------------- Read data ----------------------------------------------------*/
-    while ((lineQStr = OceanFile.readLine()) != "")
+    while ((lineQStr = inText.readLine()) != "")
     {
         OceanData oceanData;
-        lineQStr                       = OceanFile.readLine();
+        lineQStr                       = inText.readLine();
         oceanData.stationName          = lineQStr.mid(2,4);                          // Get station name
-        lineQStr                       = OceanFile.readLine();
+        lineQStr                       = inText.readLine();
         if ( isModeEasy)
         {
             oceanData.Longitude        = lineQStr.mid(58,10).toDouble();
@@ -63,7 +54,7 @@ bool OceanTideFile::readFile(const QString &filePath)
             Month[4] = "MAY", Month[5] = "JUN", Month[6 ] = "Jul", Month[7 ] = "AUG",
             Month[8] = "SEP", Month[9] = "OCT", Month[10] = "NOV", Month[11] = "DEC";
 
-            lineQStr                   = OceanFile.readLine();
+            lineQStr                   = inText.readLine();
             /*------------- Get time ----------------------------------*/
             oceanData.myTime.EPT.year  = lineQStr.mid(63,4).toInt();
             for (int i = 0; i < 12; i++)
@@ -78,10 +69,10 @@ bool OceanTideFile::readFile(const QString &filePath)
             oceanData.myTime.EPT.hour  = 0;
             oceanData.myTime.EPT.minute= 0;
             oceanData.myTime.EPT.second= 0;
-            oceanData.myTime           = MyFuncionCenter::
+            oceanData.myTime           = MyFunctionCenter::
                                          timeIntegrator(oceanData.myTime.EPT);
             /*----------- Get position --------------------------------*/
-            lineQStr                   = OceanFile.readLine();
+            lineQStr                   = inText.readLine();
             oceanData.Longitude        = lineQStr.mid(49,10).toDouble();
             oceanData.Latitude         = lineQStr.mid(59,10).toDouble();
             lineQStr                   = lineQStr.trimmed();
@@ -94,7 +85,7 @@ bool OceanTideFile::readFile(const QString &filePath)
         oceanData.tideData             = obseveDataPattern;                         // Save array follow the order in header
         for (int i = 0; i < 6; i++)
         {
-            lineQStr                   = OceanFile.readLine();
+            lineQStr                   = inText.readLine();
             for (int j = 0; j < observeTypeNum; j++)
             {
                  oceanData.tideData[j].
@@ -104,6 +95,6 @@ bool OceanTideFile::readFile(const QString &filePath)
         allOceanData.push_back(oceanData);                                          // Push this data block into array
      }
 
-    OceanFile.close();
+    closeFile();
     return true;
 }

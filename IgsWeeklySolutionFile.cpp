@@ -6,25 +6,20 @@
  * Input    : const QString &filePath
  * Output   : bool (if read success)
  *-----------------------------------------------------------------------------*/
-bool IgsWeeklySolutionFile::readFile(const QString &filePath)
+bool IgsWeeklySolutionFile::readFile()
 {
-    QFile weeklyFile(filePath);
-    if(!  weeklyFile.open( QIODevice::ReadOnly ))
-    {
-          QMessageBox::warning(NULL,                       "warning",
-                              "Igs Weekly Solution File Open faild!",
-                               QMessageBox::Yes, QMessageBox::Yes);
-          return false;
-    }
+    if (!fileCommonDeal("Igs Weekly Solution File Open faild!"))
+        return false;
 
+    QTextStream inText(&inFile);
     QString lineQStr = "";
-    while ((lineQStr = weeklyFile.readLine()).indexOf("-SITE/ECCENTRICITY") < 0); // Ignore the unuseful line
-    lineQStr         = weeklyFile.readLine();
-    lineQStr         = weeklyFile.readLine();
-    lineQStr         = weeklyFile.readLine();
+    while ((lineQStr = inText.readLine()).indexOf("-SITE/ECCENTRICITY") < 0);     // Ignore the unuseful line
+    lineQStr         = inText.readLine();
+    lineQStr         = inText.readLine();
+    lineQStr         = inText.readLine();
 
     int  sum = 0;
-    while((lineQStr  = weeklyFile.readLine()) != "")                              // Get station number
+    while((lineQStr  = inText.readLine()) != "")                                 // Get station number
     {
         if (lineQStr.indexOf("-SOLUTION/EPOCHS") >= 0)
             break;
@@ -32,18 +27,18 @@ bool IgsWeeklySolutionFile::readFile(const QString &filePath)
             sum++;
     }
     weeklySolutionData = new StationCoordData[sum];
-    while ((lineQStr = weeklyFile.readLine()).indexOf("+SOLUTION/ESTIMATE") < 0); // Ignore the unuseful line
+    while ((lineQStr = inText.readLine()).indexOf("+SOLUTION/ESTIMATE") < 0);    // Ignore the unuseful line
 
     int iter = 0;
-    while ((lineQStr = weeklyFile.readLine()) !=  "")
+    while ((lineQStr = inText.readLine()) !=  "")
     {
          if (lineQStr.indexOf("STAX") >= 0)
          {
              weeklySolutionData[iter].MARKER_NAME = lineQStr.mid(14,4);
              weeklySolutionData[iter].obsPos[0]   = lineQStr.mid(47,21).toDouble();
-             lineQStr    = weeklyFile.readLine();
+             lineQStr    = inText.readLine();
              weeklySolutionData[iter].obsPos[1]   = lineQStr.mid(47,21).toDouble();
-             lineQStr    = weeklyFile.readLine();
+             lineQStr    = inText.readLine();
              weeklySolutionData[iter].obsPos[2]   = lineQStr.mid(47,21).toDouble();
              iter++;
          }
@@ -51,6 +46,6 @@ bool IgsWeeklySolutionFile::readFile(const QString &filePath)
              break;
 
     }
-    weeklyFile.close();
+    closeFile();
     return true;
 }

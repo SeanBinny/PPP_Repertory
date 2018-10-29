@@ -13,48 +13,48 @@
 void NavigationFile::saveNavDataToArray(const EpochNavigationData &navData)
 {
 
-    if     (navData.satType == "G")
+    if     (navData.satTN.Type == "G")
     {
         if (GPS.empty())
             GPS.resize(32);
-        GPS[navData.PRN-1].push_back(navData);
+        GPS[navData.satTN.PRN-1].push_back(navData);
     }
-    else if(navData.satType == "C")
+    else if(navData.satTN.Type == "C")
     {
         if (BDS.empty())
             BDS.resize(35);
-        BDS[navData.PRN-1].push_back(navData);
+        BDS[navData.satTN.PRN-1].push_back(navData);
     }
-    else if(navData.satType == "E")
+    else if(navData.satTN.Type == "E")
     {
         if (GALILEO.empty())
             GALILEO.resize(40);
-        GALILEO[navData.PRN-1].push_back(navData);
+        GALILEO[navData.satTN.PRN-1].push_back(navData);
     }
-    else if(navData.satType == "J")
+    else if(navData.satTN.Type == "J")
     {
         if (QZSS.empty())
             QZSS.resize(40);
-        QZSS[navData.PRN-1].push_back(navData);
+        QZSS[navData.satTN.PRN-1].push_back(navData);
     }
-    else if(navData.satType == "I")
+    else if(navData.satTN.Type == "I")
     {
         if (IRNSS.empty())
             IRNSS.resize(40);
-        IRNSS[navData.PRN-1].push_back(navData);
+        IRNSS[navData.satTN.PRN-1].push_back(navData);
     }
-    else if(navData.satType == "R")
+    else if(navData.satTN.Type == "R")
     {
         if (GLONASS.empty())
             GLONASS.resize(40), memset(K,0,sizeof(K));
-        GLONASS[navData.PRN-1].push_back(navData);
-        K[navData.PRN] = navData.dataTwoPtr->K;
+        GLONASS[navData.satTN.PRN-1].push_back(navData);
+        K[navData.satTN.PRN] = navData.dataTwoPtr->K;
     }
-    else if(navData.satType == "S")
+    else if(navData.satTN.Type == "S")
     {
         if (SBAS.empty())
             SBAS.resize(50);
-        SBAS[navData.PRN-1].push_back(navData);
+        SBAS[navData.satTN.PRN-1].push_back(navData);
     }
 }
 /*-------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ void NavigationFile::saveNavDataToArray(const EpochNavigationData &navData)
  * Input    : const QString &filePath
  * Output   : bool (if read success)
  *------------------------------------------------------------------------------*/
-bool NavigationFile::readFile(const QString &filePath)
+bool NavigationFile::readFile()
 {
     int version = RinexFileCenter::readRinexVersion(filePath);                   // Judge version
     RinexFileCenter *rinexFilePtr = NULL;                                        // Dynamically reading file
@@ -125,7 +125,7 @@ bool Rinex3_FileCenter::readNavigateFile(NavigationFile &naFile,
  *            const QString &filePath
  * Output   : EpochNavigationData    &navData .(Save epoch navigation data)
  *------------------------------------------------------------------------------*/
-void Rinex3_FileCenter::readTypeOneData(QFile &inFile, QString &lineQStr,
+void Rinex3_FileCenter::readTypeOneData(QTextStream &inText, QString &lineQStr,
                                         EpochNavigationData    &navData)
 {
     navData.myTime.EPT.year   = lineQStr.mid(4, 4).toInt();
@@ -134,7 +134,7 @@ void Rinex3_FileCenter::readTypeOneData(QFile &inFile, QString &lineQStr,
     navData.myTime.EPT.hour   = lineQStr.mid(14,3).toInt();
     navData.myTime.EPT.minute = lineQStr.mid(17,3).toInt();
     navData.myTime.EPT.second = lineQStr.mid(20,3).toDouble();
-    navData.myTime = MyFuncionCenter::timeIntegrator(navData.myTime.EPT);
+    navData.myTime  =  MyFunctionCenter::timeIntegrator(navData.myTime.EPT);
 
     DataBlockOne       dataOne;
     dataOne.af0     =  lineQStr.mid(23,19).toDouble();
@@ -142,48 +142,48 @@ void Rinex3_FileCenter::readTypeOneData(QFile &inFile, QString &lineQStr,
     dataOne.af2     =  lineQStr.mid(61,19).toDouble();
 
  /*...................................Broadcast Track 1.........................*/
-    lineQStr        =  inFile.readLine();
+    lineQStr        =  inText.readLine();
     dataOne.Crs     =  lineQStr.mid(23,19).toDouble();
     dataOne.Delta_n =  lineQStr.mid(42,19).toDouble();
     dataOne.M0      =  lineQStr.mid(61,19).toDouble();
 
 /*...................................Broadcast Track 2.........................*/
-    lineQStr        =  inFile.readLine();
+    lineQStr        =  inText.readLine();
     dataOne.Cuc     =  lineQStr.mid(4, 19).toDouble();
     dataOne.ecc     =  lineQStr.mid(23,19).toDouble();
     dataOne.Cus     =  lineQStr.mid(42,19).toDouble();
     dataOne.sqrt_a  =  lineQStr.mid(61,19).toDouble();
 
 /*...................................Broadcast Track 3.........................*/
-    lineQStr        =  inFile.readLine();
+    lineQStr        =  inText.readLine();
     dataOne.TOE     =  lineQStr.mid(4, 19).toDouble();
     dataOne.Cic     =  lineQStr.mid(23,19).toDouble();
     dataOne.Omega0  =  lineQStr.mid(42,19).toDouble();
     dataOne.Cis     =  lineQStr.mid(61,19).toDouble();
 
 /*...................................Broadcast Track 4.........................*/
-    lineQStr        =  inFile.readLine();
+    lineQStr        =  inText.readLine();
     dataOne.i0      =  lineQStr.mid(4, 19).toDouble();
     dataOne.Crc     =  lineQStr.mid(23,19).toDouble();
     dataOne.omega   =  lineQStr.mid(42,19).toDouble();
     dataOne.Omegadot=  lineQStr.mid(61,19).toDouble();
 
 /*...................................Broadcast Track 5.........................*/
-    lineQStr        =  inFile.readLine();
+    lineQStr        =  inText.readLine();
     dataOne.idot    =  lineQStr.mid(4, 19).toDouble();
     dataOne.cflgL2  =  lineQStr.mid(23,19).toDouble();
     dataOne.weekNum =  lineQStr.mid(42,19).toDouble();
     dataOne.pflgL2  =  lineQStr.mid(61,19).toDouble();
 
 /*...................................Broadcast Track 6.........................*/
-    lineQStr        =  inFile.readLine();
+    lineQStr        =  inText.readLine();
     dataOne.sAccur  =  lineQStr.mid(4, 19).toDouble();
     dataOne.sHealth =  lineQStr.mid(23,19).toDouble();                          // Satellite health status(0=OK)
     dataOne.TGD     =  lineQStr.mid(42,19).toDouble();
     dataOne.IODC    =  lineQStr.mid(61,19).toDouble();
 
 /*...................................Broadcast Track 7.........................*/
-    lineQStr        =  inFile.readLine();
+    lineQStr        =  inText.readLine();
     dataOne.transmitTime
                     =  lineQStr.mid(4, 19).toDouble();
 
@@ -197,7 +197,7 @@ void Rinex3_FileCenter::readTypeOneData(QFile &inFile, QString &lineQStr,
  *            const QString &filePath
  * Output   : EpochNavigationData    &navData .(Save epoch navigation data)
  *------------------------------------------------------------------------------*/
-void Rinex3_FileCenter::readTypeTwoData(QFile &inFile, QString &lineQStr,
+void Rinex3_FileCenter::readTypeTwoData(QTextStream &inText, QString &lineQStr,
                                         EpochNavigationData    &navData)
 {
     navData.myTime.EPT.year   = lineQStr.mid(4, 4).toInt();
@@ -206,7 +206,7 @@ void Rinex3_FileCenter::readTypeTwoData(QFile &inFile, QString &lineQStr,
     navData.myTime.EPT.hour   = lineQStr.mid(14,3).toInt();
     navData.myTime.EPT.minute = lineQStr.mid(17,3).toInt();
     navData.myTime.EPT.second = lineQStr.mid(20,3).toDouble();
-    navData.myTime = MyFuncionCenter::timeIntegrator(navData.myTime.EPT);
+    navData.myTime =  MyFunctionCenter::timeIntegrator(navData.myTime.EPT);
 
     DataBlockTwo      dataTwo;
     dataTwo.TauN   =  lineQStr.mid(23,19).toDouble();
@@ -214,14 +214,14 @@ void Rinex3_FileCenter::readTypeTwoData(QFile &inFile, QString &lineQStr,
     dataTwo.TK     =  lineQStr.mid(61,19).toDouble();
 
 /*...................................Broadcast Track 1.........................*/
-    lineQStr       =  inFile.readLine();
+    lineQStr       =  inText.readLine();
     dataTwo.X      =  lineQStr.mid(4, 19).toDouble() * 1000.0;
     dataTwo.X_dot  =  lineQStr.mid(23,19).toDouble() * 1000.0;
     dataTwo.AC_X   =  lineQStr.mid(42,19).toDouble() * 1000.0;
     dataTwo.Bn     =  lineQStr.mid(61,19).toDouble();
 
 /*...................................Broadcast Track 2.........................*/
-    lineQStr       =  inFile.readLine();
+    lineQStr       =  inText.readLine();
     dataTwo.Y      =  lineQStr.mid(4, 19).toDouble() * 1000.0;
     dataTwo.Y_dot  =  lineQStr.mid(23,19).toDouble() * 1000.0;
     dataTwo.AC_Y   =  lineQStr.mid(42,19).toDouble() * 1000.0;
@@ -229,7 +229,7 @@ void Rinex3_FileCenter::readTypeTwoData(QFile &inFile, QString &lineQStr,
     dataTwo.K      =  int(dataTwo.K );
 
 /*...................................Broadcast Track 3.........................*/
-    lineQStr       =  inFile.readLine();
+    lineQStr       =  inText.readLine();
     dataTwo.Z      =  lineQStr.mid(4, 19).toDouble() * 1000.0;
     dataTwo.Z_dot  =  lineQStr.mid(23,19).toDouble() * 1000.0;
     dataTwo.AC_Z   =  lineQStr.mid(42,19).toDouble() * 1000.0;
@@ -262,15 +262,16 @@ bool Rinex3_FileCenter::readTypeOneNavFile(const QString  &filePath,
     }
 
     QString lineQStr = "";
-    while ((lineQStr = navInFile.readLine()).indexOf("END OF HEADER") < 0);      // Ignore the header block
+    QTextStream inText(&navInFile);
+    while ((lineQStr = inText.readLine()).indexOf("END OF HEADER") < 0);         // Ignore the header block
     /*--------------------- Read data ------------------------------------------*/
-    while ((lineQStr = navInFile.readLine()) != "")
+    while ((lineQStr = inText.readLine()) != "")
     {
-        EpochNavigationData navData;                                             // Get type and satellite number
-        navData.satType  =  system;
-        navData.PRN      =  lineQStr.mid(1,2).toInt();
+        EpochNavigationData  navData;                                            // Get type and satellite number
+        navData.satTN.Type = system;
+        navData.satTN.PRN  = lineQStr.mid(1,2).toInt();
 
-        readTypeOneData(navInFile, lineQStr, navData);
+        readTypeOneData(inText, lineQStr, navData);
 
         if (navData.dataOnePtr->sHealth != 0)                                    // Judge if satellite is healthy
             continue;
@@ -301,17 +302,16 @@ bool Rinex3_FileCenter::readTypeTwoNavFile(const QString  &filePath,
     }
 
     QString lineQStr = "";
-
-    while ((lineQStr = navInFile.readLine()).indexOf("END OF HEADER") < 0);      // Ignore the header block
+    QTextStream inText(&navInFile);
+    while ((lineQStr = inText.readLine()).indexOf("END OF HEADER") < 0);         // Ignore the header block
     /*--------------------- Read data ------------------------------------------*/
-    while ((lineQStr = navInFile.readLine()) != "")
+    while ((lineQStr = inText.readLine()) != "")
     {
-        EpochNavigationData navData;                                             // Get type and satellite number
-        navData.satType  =  system;
-        navData.PRN      =  lineQStr.mid(1,2).toInt();
+        EpochNavigationData  navData;                                            // Get type and satellite number
+        navData.satTN.Type = system;
+        navData.satTN.PRN  = lineQStr.mid(1,2).toInt();
 
-        readTypeTwoData(navInFile, lineQStr, navData);
-
+        readTypeTwoData(inText, lineQStr, navData);
         if (navData.dataTwoPtr->Bn != 0)                                         // Judge if satellite is healthy
             continue;
         naFile.saveNavDataToArray(navData);
@@ -341,27 +341,26 @@ bool Rinex3_FileCenter::readTypeMixedNavFile(const QString  &filePath,
     }
 
     QString lineQStr = "";
-
-    while ((lineQStr = navInFile.readLine()).indexOf("END OF HEADER") < 0);      // Ignore the header block
+    QTextStream inText(&navInFile);
+    while ((lineQStr = inText.readLine()).indexOf("END OF HEADER") < 0);         // Ignore the header block
     /*--------------------- Read data ------------------------------------------*/
-    while ((lineQStr = navInFile.readLine()) != "")
- //   for (int i = 0; i < 500;i ++)
+    while ((lineQStr = inText.readLine()) != "")
     {
         EpochNavigationData navData;                                             // Get type and satellite number
-        navData.satType     =  lineQStr.mid(0,1);
-        navData.PRN         =  lineQStr.mid(1,2).toInt();
-        if (navData.satType == "G" || navData.satType == "C" ||
-            navData.satType == "E" || navData.satType == "J" ||
-            navData.satType == "I")
+        navData.satTN.Type     =  lineQStr.mid(0,1);
+        navData.satTN.PRN      =  lineQStr.mid(1,2).toInt();
+        if (navData.satTN.Type == "G" || navData.satTN.Type == "C" ||
+            navData.satTN.Type == "E" || navData.satTN.Type == "J" ||
+            navData.satTN.Type == "I")
         {
-            readTypeOneData(navInFile, lineQStr,navData);
+            readTypeOneData(inText, lineQStr,navData);
             if (navData.dataOnePtr->sHealth != 0)                                // Judge if satellite is healthy
                 continue;
             naFile.saveNavDataToArray(navData);
         }
-        else if (navData.satType == "R" || navData.satType == "S" )
+        else if (navData.satTN.Type == "R" || navData.satTN.Type == "S" )
         {
-            readTypeTwoData(navInFile, lineQStr, navData);
+            readTypeTwoData(inText, lineQStr, navData);
             if (navData.dataTwoPtr->Bn != 0)                                     // Judge if satellite is healthy
                 continue;
             naFile.saveNavDataToArray(navData);

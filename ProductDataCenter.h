@@ -16,7 +16,7 @@ using namespace Eigen;
  *-------------------------------------------------------------*/
 struct PreciseOrbitData
 {
-    QString SatelliteName;
+    Sat_TypePrn satTN;
     double  x;
     double  y;
     double  z;
@@ -42,17 +42,20 @@ struct EpochPreciseOrbitData
 class PrecisionEphemerisFile : public FileCenter
 {
 public:
-    static  vector <EpochPreciseOrbitData> allPrecionData;      // Save all epoach precise data
-    static  int     timeTrans;                                  // Judge if should use BDS time in thses file
+    vector <EpochPreciseOrbitData> allPrecionData;              // Save all epoach precise data
+    static int    timeTrans;                                    // Judge if should use BDS time in thses file
 public:
-    virtual bool    readFile(const QString &filePath);          // Inherit function
-
+    virtual bool  readFile();
+    virtual void  setFilePath(const QString &FilePath){
+                  filePath = FilePath;}
+    static  int   getSatIndex(const vector<PreciseOrbitData> &aimArray,
+                              const int &aimPrn);
 private:
-    static  int     epochNum;
-    static  int     satelliteNum;
-    static  double  julianDay;                                  // Julian date in header
-    static  QString systemType;                                 // Judge the type of the clk(GPS or GLONASS or Mixed)
-    static  QString productType;                                // Judge the type of the clk(igs or code or others)
+    int     epochNum;
+    int     satelliteNum;
+    double  julianDay;                                          // Julian date in header
+    QString systemType;                                         // Judge the type of the clk(GPS or GLONASS or Mixed)
+    QString productType;                                        // Judge the type of the clk(igs or code or others)
 
 };
 
@@ -66,7 +69,7 @@ private:
 struct ClkHeaderInfor /* No use */
 {
     QString Rtype;                                              // receiver type
-    double  X;                                                   // The location of the receiver
+    double  X;                                                  // The location of the receiver
     double  Y;
     double  Z;
 };
@@ -95,9 +98,10 @@ struct AS_clkData
     double  clockData_BDS[32]     = {0};
     double  clockData_GLONASS[32] = {0};
     double  clockData_Galileo[32] = {0};
-    double  clockData_J[32]       = {0};
-    double  clockData_S[32]       = {0};
-    double  satClkDiffer;   /* No use */                        // The clock difference of satellite
+    double  clockData_QZSS[32]    = {0};
+    double  clockData_SBAS[32]    = {0};
+
+    double  satClkDiffer;   /* Un use */                        // The clock difference of satellite
     double  satClkVelocity;                                     // The Velocity of the satellite
 
 };
@@ -109,15 +113,14 @@ struct AS_clkData
 class PrecisionClockFile : public FileCenter
 {
 public:
-    virtual bool  readFile(const QString &filePath);            // inherit function
-
+    virtual bool  readFile();                                   // inherit function
+    virtual void  setFilePath(const QString &FilePath){
+                  filePath = FilePath;}
 public:
-    static  vector<AS_clkData> SatelliteClkData;                // satellite clock data
-
-private:
-    static  double  leapSecond;
-    static  double  INTERVAL;
-    static  QString navigationType;
+    vector<AS_clkData> satelliteClkData;                        // satellite clock data
+    double  leapSecond;
+    double  INTERVAL;
+    QString navigationType;
 };
 
 /*                    ****************************************************                                       */
@@ -128,7 +131,7 @@ private:
  *-------------------------------------------------------------*/
 struct ErpData
 {
-    MyTime myTime;                                              // used to save MJD and JD
+    MyTime myTime;                                              // Used to save MJD and JD
     double xPole;
     double yPole;
     double UT1mUTC;
@@ -136,6 +139,8 @@ struct ErpData
     double dEps; /* UnKonwn*/
     ErpData()
         :dPsi(0), dEps(0){}
+
+    static MyTime baseTimeJ2000;
 };
 
 /*--------------------------------------------------------------
@@ -145,9 +150,13 @@ struct ErpData
 class EarthRotationParameterFile : public FileCenter
 {
 public:
-    virtual bool  readFile(const QString &filePath);            // inherit function
+    virtual bool  readFile();                                   // inherit function
+    virtual void  setFilePath(const QString &FilePath){
+                  filePath = FilePath;}
+
 public:
     static  vector <ErpData> allErpData;
+
 };
 
 
@@ -170,7 +179,6 @@ struct OceanData
     QString stationName;                                        // Site name
     MyTime  myTime;
 
-    double  Comment; /* Unuse */
     double  Longitude;
     double  Latitude;
     double  Height;
@@ -184,10 +192,12 @@ struct OceanData
 class OceanTideFile : public FileCenter
 {
 public:
-    static  vector <OceanData> allOceanData;
-    static  bool               isModeEasy;                      // be set to choose one type of read functions
+    vector <OceanData> allOceanData;
+    static  bool       isModeEasy;                              // be set to choose one type of read functions
 public:
-    virtual bool  readFile(const QString &filePath);            // Inherit function
+    virtual bool  readFile();                                   // Inherit function
+    virtual void  setFilePath(const QString &FilePath){
+                  filePath = FilePath;}
 };
 
 /*                    ****************************************************                                       */
@@ -198,35 +208,35 @@ public:
  *-------------------------------------------------------------*/
 struct AntennaData
 {
-    QString  antennaType;                                        // Satellite type or Antenna type
-    QString  COSPAR_ID;                                          // Committee on Space Research
-    QString  calibrationMethod;                                  // Save method of calibration
-    QString  agencyName;                                         // Name of agency
-    MyTime   myTime;                                             // Only use year, month and day
-    QString  sateOneType;                                        // Satellite one Type
-    QString  sateTwoType;                                        // Satellite two Type
-    int      sateOneNum;                                         // Satellite one number
-    int      sateTwoNum;                                         // Satellite two number
-    double   ZEN1;
+    QString  antennaType;                                       // Satellite type or Antenna type
+    QString  COSPAR_ID;                                         // Committee on Space Research
+    QString  calibrationMethod;                                 // Save method of calibration
+    QString  agencyName;                                        // Name of agency
+    MyTime   myTime;                                            // Only use year, month and day
+    QString  sNNType;                                           // Satellite system flag
+    QString  sNNNType;                                          // satellite system flag
+    int      sNN;                                               // Satellite PRN number
+    int      sNNN;                                              // SVN number (GPS), GLONASS number, GSAT number (Galileo) or SVN number (QZSS); blank (Compass, SBAS)
+    double   ZEN1;                                              // Zenith distance
     double   ZEN2;
-    double   DAZI;                                               // Azimuth increment
-    double   DZEN;                                               // Elevation increment
-    double   VALID_FROM;                                         // The start julian date
-    double   VALID_UNTIL;                                        // The end julian date
-    QString  SINEX_CODE_Type;
-    double   SINEX_CODE;
-    double   OF_FREQUENCIES;
-    double   F1_NEU[3];
-    MatrixXd F1_NOAZI;                                           // Save data of frequency
-    double   F2_NEU[3];
-    MatrixXd F2_NOAZI;                                           // Save data of frequency
+    double   DAZI;                                              // Azimuth increment 360°must be divisible by 'DAZI'(0 - 360)
+    double   DZEN;                                              // Elevation increment 'ZEN1' and 'ZEN2' always have to be multiples of 'DZEN' (ZEN1 - ZEN2)
+    double   VALID_FROM;                                        // The start date
+    double   VALID_UNTIL;                                       // The end date
+    QString  FREQUENCY_Type;                                    // Name of antenna calibration model to be used in the  SINEX format
+    double   FREQUENCY_CODE;
+    double   OF_FREQUENCIES;                                    // Number of frequencies
+    Vector3d F1_NEU;
+    MatrixXd F1_NOAZI;                                          // Save data of frequency
+    Vector3d F2_NEU;
+    MatrixXd F2_NOAZI;                                          // Save data of frequency
 
     AntennaData()
-        : sateOneNum(0),  sateTwoNum(0),
-          ZEN1(0.0),      ZEN2(0.0),
-          DAZI(0.0),      DZEN(0.0),
-          VALID_FROM(0.0),VALID_UNTIL(0.0),
-          SINEX_CODE(0.0),OF_FREQUENCIES(0.0)
+        : sNN (0),            sNNN(0),
+          ZEN1(0.0),          ZEN2(0.0),
+          DAZI(0.0),          DZEN(0.0),
+          VALID_FROM(0.0),    VALID_UNTIL(0.0),
+          FREQUENCY_CODE(0.0),OF_FREQUENCIES(0.0)
     {}
 };
 /*--------------------------------------------------------------
@@ -237,35 +247,41 @@ class AntennaInfoFile : public FileCenter
 {
 public:
    ~AntennaInfoFile();
-    virtual bool   readFile(const QString &filePath);            // Inherit function
+    AntennaInfoFile(){
+        antennaData_GPS     = NULL,  antennaData_GLONASS = NULL;
+        antennaData_BDS     = NULL,  antennaData_Galileo = NULL;
+    }
+    virtual bool  readFile();                                   // Inherit function
+    virtual void  setFilePath(const QString &FilePath){
+                  filePath = FilePath;}
+
 public:
-    static  AntennaData **antennaData_GPS;                       // 1) Use 2D array to conserve memory
-    static  AntennaData **antennaData_BDS;                       // 2) Only Galileo need 60 rows, others are 32 rows
-    static  AntennaData **antennaData_GLONASS;                   // 3) This array are not have eual length ,some of
-    static  AntennaData **antennaData_Galileo;                   //    them has 0 element
-    static  vector <AntennaData> antennaData_Other;
+    vector <AntennaData> antennaData_Other;                     // Save antenna data of receiver, SBAS, and JAZZ
+
+    vector <AntennaData> **antennaData_GPS;                     // 1) Use 2D array to conserve memory
+    vector <AntennaData> **antennaData_BDS;                     // 2) Only Galileo need 60 rows, others are 32 rows
+    vector <AntennaData> **antennaData_GLONASS;                 // 3) This array are not have eual length ,some of
+    vector <AntennaData> **antennaData_Galileo;                 //    them has 0 element
 
 private:
-    static double      ANTEX_VERSION;
-    static QString     SYST;                                     // System type
-    static QString     REFANT;
-    static QString     PCV_TYPE;
-    static QString     productType; /* Unuse*/
-
+    double      ANTEX_VERSION;
+    QString     SYST;                                           // System type (G, R, ... M)
+    QString     REFANT;                                         // Reference antenna type for relative values (blank : AOAD/M_T)
+    QString     PCV_TYPE;                                       // A absolute values \ R relative values
 };
 
 /*                    ****************************************************                                       */
-/****************************    IGS weekly solution  Data(*.snx)          ***************************************/
+/****************************    IGS weekly solution  Data(*.snx)       ******************************************/
 /*                    ****************************************************                                       */
 /*--------------------------------------------------------------
  * Function : Save IGS station coordinate data of  station
  *-------------------------------------------------------------*/
 struct StationCoordData
 {
-    double   date;                                               // Gregory time
+    double   date;                                              // Gregory time
 
     QString  MARKER_NAME;
-    Vector3d obsPos;                                             // Positon of observation
+    Vector3d obsPos;                                            // Positon of observation
 };
 
 /*--------------------------------------------------------------
@@ -279,7 +295,9 @@ public:
         delete [] weeklySolutionData;}
     IgsWeeklySolutionFile(){
         weeklySolutionData = NULL;}
-    virtual bool  readFile(const QString &filePath);            // Inherit function
+    virtual bool  readFile();
+    virtual void  setFilePath(const QString &FilePath){
+                  filePath = FilePath;}
 public:
     StationCoordData *weeklySolutionData;
 };
@@ -290,12 +308,14 @@ public:
 class IgsStationCoordinateFile : public FileCenter
 {
 public:
-    virtual bool  readFile(const QString &filePath);            // Inherit function
+    virtual bool  readFile();                                     // Inherit function
+    virtual void  setFilePath(const QString &FilePath){
+                  filePath = FilePath;}
 public:
     vector <StationCoordData> stationCoordinateData;
 };
 /*                    ****************************************************                                       */
-/****************************    Different Code Bias  Data(*.bsx)          ***************************************/
+/****************************    Different Code Bias  Data(*.bsx)     ********************************************/
 /*                    ****************************************************                                       */
 
 /*--------------------------------------------------------------
@@ -303,7 +323,7 @@ public:
  *-------------------------------------------------------------*/
 struct DCB_GPS
 {
-    double* C1C_C1W;                                            // DCB values of GPS
+    double* C1C_C1W;                                             // DCB values of GPS
     double* C1C_C2W;
     double* C2W_C2S;
     double* C2W_C2L;
@@ -317,7 +337,7 @@ struct DCB_GPS
 
 struct DCB_BDS
 {
-    double* C2I_C7I;                                            // DCB values of BDS
+    double* C2I_C7I;                                             // DCB values of BDS
     double* C2I_C6I;
     double* C7I_C6I;
     DCB_BDS();
@@ -352,7 +372,9 @@ struct DCB_GALILEO
 class DifferentCodeBiasFile : public FileCenter
 {
 public:
-    virtual bool readFile(const QString &filePath);
+    virtual bool readFile();
+    virtual void setFilePath(const QString &FilePath){
+                 filePath = FilePath;}
 public:
 
     DCB_GPS     *GPS_DCB;
@@ -363,4 +385,18 @@ public:
    ~DifferentCodeBiasFile();
 };
 
+/*                    ****************************************************                                       */
+/****************************    Sun and moon position data       ************************************************/
+/*                    ****************************************************                                       */
+/*--------------------------------------------------------------
+ * Function : Save sun and moon position data
+ *-------------------------------------------------------------*/
+struct SunMoonPosition
+{
+    double   accumulateGpsSec;
+    Vector3d sunPosition;                                       // The coordinates of the sun
+    Vector3d moonPosition;                                      // The coordinates of the moon
+};
+
+extern vector<SunMoonPosition> sunMoonPos;                      // Define a global vector
 #endif // DATACENETR_H
