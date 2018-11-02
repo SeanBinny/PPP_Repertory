@@ -387,6 +387,7 @@ void ErrorModel::diffCodeBiasCor(/*QVector<commonview_file>& gongshifile2,system
  *-----------------------------------------------------------------------------*/
 MatrixXd ErrorModel::getOceanParameter(const MyTime &time)
 {
+    const double TORAD = 0.017453;/////////////////////////////
     int oceanTidenum = 11;
     MatrixXd sig(1,  oceanTidenum);         /*  是不是可以提出来,或改成静态的 */
 
@@ -414,9 +415,9 @@ MatrixXd ErrorModel::getOceanParameter(const MyTime &time)
 
     double d    =   time.DOY + 365.0 * (year - 1975.0) + floor((year  - 1973.0) / 4.0);
     double t    =  (27392.500528 + 1.000000035 * d) / 36525.0;
-    double H0   =  (279.69668 + (36000.768930485 + 3.03e-4 * t) * t)  * ToRAD;
-    double S0   =(((1.9e-6 * t - 0.001133) * t + 481267.88314137) * t + 270.434358) * ToRAD;
-    double P0   =(((-1.2e-5* t - 0.010325) * t + 4069.0340329577) * t + 334.329653) * ToRAD;
+    double H0   =  (279.69668 + (36000.768930485 + 3.03e-4 * t) * t)  * TORAD;
+    double S0   =(((1.9e-6 * t - 0.001133) * t + 481267.88314137) * t + 270.434358) * TORAD;
+    double P0   =(((-1.2e-5* t - 0.010325) * t + 4069.0340329577) * t + 334.329653) * TORAD;
 
     for (int k = 0; k < oceanTidenum; k++)
     {
@@ -441,8 +442,8 @@ double ErrorModel::allTideCor(const Vector3d  &DAZ, const Vector3d &tide)
     double sinEl = sin(elev);
     double cosAz = cos(DAZ[1]);
     double sinAz = sin(DAZ[1]);
-    double resTide  =  tide[0]*cosEl*cosAz +
-                       tide[1]*cosEl*sinAz + tide[2]*sinEl;
+    double resTide  =  tide[0]*cosEl*sinAz +
+                       tide[1]*cosEl*cosAz + tide[2]*sinEl;
     return resTide ;
 }
 
@@ -455,6 +456,7 @@ double ErrorModel::allTideCor(const Vector3d  &DAZ, const Vector3d &tide)
  *-----------------------------------------------------------------------------*/
 Vector3d ErrorModel::oceanTideCor(const OceanData &oceanData, const MyTime &myTime)
 {
+    double TORAD=0.017453;//////////////////////////
     double directionNum  = 3;
     double oceanWaveNum  = 11;
     MatrixXd parameter   = getOceanParameter(myTime);
@@ -465,7 +467,7 @@ Vector3d ErrorModel::oceanTideCor(const OceanData &oceanData, const MyTime &myTi
         double temp = 0.0;
         for (int k = 0; k < oceanWaveNum; k++)
             temp += oceanData.tideData[k].observeValue[i] *
-                    cos(parameter(0,k) -  oceanData.tideData[k].observeValue[i+3] * ToRAD);/* un known */
+                    cos(parameter(0,k) -  oceanData.tideData[k].observeValue[i+3] * TORAD);/* un known */
         tideRWS[i] = temp;
     }
     Vector3d tideENU;

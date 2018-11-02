@@ -693,7 +693,7 @@ void  MyFunctionCenter::kalmanFilter(MatrixXd  I,  MatrixXd  F, MatrixXd R,
                                      MatrixXd &Q,  VectorXd &X, VectorXd &V)
 {
     /*---------------------Output predictive value----------------------------*/
-    MatrixXd M = F*Q*F.transpose() + Qw;                                        // M is predictive value of Q
+    MatrixXd M =  F*Q*F.transpose() + Qw;                                        // M is predictive value of Q
     //X = F * X;
     /*----------------------Output estimate value-----------------------------*/
     MatrixXd K = (M*B.transpose())*(B*M*B.transpose() + R).inverse();

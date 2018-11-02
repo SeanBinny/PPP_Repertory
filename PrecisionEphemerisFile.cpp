@@ -110,7 +110,7 @@ bool PrecisionEphemerisFile::readFile()
             MyTime utc = MyFunctionCenter::GPS_to_UTC(epochData.myTime);
             MyTime tdt = MyFunctionCenter::UTC_to_TDT(utc);
 
-            //  tdt.EPT.second = floor(tdt.EPT.second);
+            tdt.EPT.second = floor(tdt.EPT.second);/////////////////////////
             smPos.sunPosition      = DataMatchingCenter::seekSunPosition(tdt);  // 这一块是不是可以放到输出ppp那
             smPos.moonPosition     = DataMatchingCenter::seekMoonPosition(tdt);
             smPos.accumulateGpsSec = epochData.accumulateGpsSec;

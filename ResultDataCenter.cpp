@@ -60,6 +60,22 @@ void ResultFile_PPP::getFilesPtr(PrecisionEphemerisFile     *eph_Fp,
     K_ptr       = K_p    ;
 }
 
+
+
+int ResultFile_PPP::epochSysSatNum(EpochObservationData &epochObsData)
+{
+    int satNum  = 0;
+    if (ModeFlag::hasGPS)
+        satNum += epochObsData.GPS_Num;
+    if (ModeFlag::hasBDS)
+        satNum += epochObsData.BDS_Num;
+    if (ModeFlag::hasGLONASS)
+        satNum += epochObsData.GLONASS_Num;
+    if (ModeFlag::hasGalileo)
+        satNum += epochObsData.Galileo_Num;
+
+    return satNum;
+}
 /*------------------------------------------------------------------------------
  * Name     : dataSourceCheck
  * Function : Check if all data source are filled
@@ -244,7 +260,7 @@ AntennaData ResultFile_PPP::outputCommonData(QTextStream  &outText)
                 << qSetFieldWidth(5 ) << startTime.second
                 << endl;
         EpochTime  endTime(obsDB_ptr->AllObservationData.back().myTime.EPT);
-        outText << qSetFieldWidth(11) << QString("Start Time:");
+        outText << qSetFieldWidth(11) << QString("End   Time:");
         outText << qSetFieldWidth(5 ) << endTime.year
                 << qSetFieldWidth(5 ) << endTime.month
                 << qSetFieldWidth(5 ) << endTime.day
@@ -254,9 +270,6 @@ AntennaData ResultFile_PPP::outputCommonData(QTextStream  &outText)
                 << endl;
     }
 
-//        sw.setRealNumberPrecision(3);
-//        double timeeeee=observe[f].satellite[sm].epoch_time[5];
-//        sw<<observe[f].satellite[sm].epoch_time[5]<<endl;
         outText << qSetFieldWidth(327)<< QString("PRN,s: Satposition(X), Satposition(Y), Satposition(Z),   Sat Clock(m),   Elevation(°),     Azimuth(°),       P1(m),          P2(m),     L1(cycles),     L2(cycles),      Trop Delay,       Trop Map,  Relativity(m),      Sagnac(m), Tide Effect(m), Antenna Height, Sat Antenna(m),OffsetL1(cycles),OffsetL2(cycles),Windup(cycles),          P3(m),     L3(cycles)") << endl;
     return recAntData;
 }
@@ -293,16 +306,15 @@ void ResultFile_PPP::outputSingleEpochData( QTextStream           &outText,
     if (posOfErp == -1)
         throw illegalParameterValue("Precision Clock File can't matched!");
 
-    int satNum_4 = epochObsData.GPS_Num + epochObsData.GLONASS_Num +            // Get number of four system satellites
-                   epochObsData.BDS_Num + epochObsData.Galileo_Num;
+    int satNum = epochSysSatNum(epochObsData);
     outText << qSetFieldWidth(17) << QString("satellite Number:")
-            << qSetFieldWidth(3 ) << satNum_4
+            << qSetFieldWidth(3 ) << satNum
             << qSetFieldWidth(23) << QString(",(yyyy-mm-dd-hh-mm-ss):");
-    outText << qSetFieldWidth(4 ) << epochOutData.myTime.EPT.year   << "-"
-            << qSetFieldWidth(2 ) << epochOutData.myTime.EPT.month  << "-"
-            << qSetFieldWidth(2 ) << epochOutData.myTime.EPT.day    << "-"
-            << qSetFieldWidth(2 ) << epochOutData.myTime.EPT.hour   << "-"
-            << qSetFieldWidth(2 ) << epochOutData.myTime.EPT.minute << "-"
+    outText << qSetFieldWidth(4 ) << epochOutData.myTime.EPT.year   << qSetFieldWidth(1) << "-"
+            << qSetFieldWidth(2 ) << epochOutData.myTime.EPT.month  << qSetFieldWidth(1) << "-"
+            << qSetFieldWidth(2 ) << epochOutData.myTime.EPT.day    << qSetFieldWidth(1) << "-"
+            << qSetFieldWidth(2 ) << epochOutData.myTime.EPT.hour   << qSetFieldWidth(1) << "-"
+            << qSetFieldWidth(2 ) << epochOutData.myTime.EPT.minute << qSetFieldWidth(1) << "-"
             << qSetFieldWidth(7 ) << epochOutData.myTime.EPT.second;
 
     MyTime   UTC = MyFunctionCenter::GPS_to_UTC(epochOutData.myTime);
@@ -319,7 +331,7 @@ void ResultFile_PPP::outputSingleEpochData( QTextStream           &outText,
     for ( int m = 0; m < 3; m++)
         sunPos[m]  = smPositon(m, 0), moonPos[m] = smPositon(m, 1);
 
-  TDT.EPT.second = int(TDT.EPT.second);
+ TDT.EPT.second = int(TDT.EPT.second);
     Vector3d  solidTide(0, 0, 0);                                               // Calculate stide and otide
     solidTide = ErrorModel::solidTideCor(recXYZ, sunPos, moonPos, coordPar, TDT);
     Vector3d  oceanTide(0, 0, 0);
@@ -327,7 +339,7 @@ void ResultFile_PPP::outputSingleEpochData( QTextStream           &outText,
                        oceDB_ptr->allOceanData[posOfOcean], epochOutData.myTime);
 
     Vector3d tideCor = solidTide + oceanTide + poleTide;                        // Get all tide correction
-    for (int num = 0; num < epochObsData.epochObserveData.size(); num++)
+    for (unsigned int num = 0; num < epochObsData.epochObserveData.size(); num++)
     {
          SingleSatelliteData       sinSatOutData;
          sinSatOutData.obsData   = epochObsData.epochObserveData[num];
@@ -509,12 +521,13 @@ bool ResultFile_PPP::outputPPPFile(QTextStream                &outText,
  *-----------------------------------------------------------------------------*/
 bool ResultFile_PPP::readFile  ()
 {
-    if (!fileCommonDeal("Antenna information File Open faild!"))
+    if (!fileCommonDeal("PPP File Open faild!"))
         return false;
     QTextStream inText(&inFile);
     inputPPPFile(inText, ResultFile_PPP::finalDataFile, K_ptr);
 
-    closeFile();
+//    closeFile();
+    inFile.close();
     return true;
 }
 
@@ -596,6 +609,7 @@ void ResultFile_PPP::inputPPPFile(QTextStream            &inText,
         int validSatNum  =  0;
         for (int n = 0; n < allSatNum; n++)
         {
+            lineQStr = inText.readLine();
             SingleSatelliteData  satData;
             int  frequencyNum =  lineQStr.mid(4,1).toInt();                     // Only the comination of f is 1,2,3 or 1,2 is available
             if  (frequencyNum == 1)
@@ -631,7 +645,7 @@ void ResultFile_PPP::inputPPPFile(QTextStream            &inText,
             satData.obsData.P3         = lineQStr.mid(326,15).toDouble();
             satData.obsData.L3         = lineQStr.mid(342,15).toDouble();
 
-            satData.Delta0 = satData.satClock*LIGHT_V - satData.tropDryDelay +  // Calulate all error delay
+            satData.Delta0 = satData.satClock         - satData.tropDryDelay +  // Calulate all error delay
                              satData.relativityEffect + satData.sagnacEffect +
                              satData.tideCorre        + satData.anteHeight   +
                              satData.anteCenterCorre;
@@ -644,4 +658,6 @@ void ResultFile_PPP::inputPPPFile(QTextStream            &inText,
         epochData.sateNum = validSatNum;
         finalDataFile.allSatelliteData.push_back(epochData);
     }
+
+    int i =0;////////////////////////
 }

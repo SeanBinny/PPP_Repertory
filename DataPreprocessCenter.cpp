@@ -389,7 +389,7 @@ void SatInformationCenter::getSatelliteInformation(const vector<AS_clkData> &sat
 
     satData.anteCenterOffset[0] = antOffset[0];
     satData.anteCenterOffset[1] = antOffset[1];
-    satData.Delta0 = satData.satClock*LIGHT_V - satData.tropDryDelay +                // Calulate all error delay
+    satData.Delta0 = satData.satClock*LIGHT_V - satData.tropDryDelay +               // Calulate all error delay
                      satData.relativityEffect + satData.sagnacEffect +
                      satData.tideCorre        + satData.anteHeight   +
                      satData.anteCenterCorre;

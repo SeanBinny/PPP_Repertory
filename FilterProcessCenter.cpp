@@ -267,12 +267,6 @@ void FilterProcessingCenter::filterProcessing(FinalDataFile &initialData,
     for (int epoch  = 0; epoch <  initialData.allSatelliteData.size(); epoch++)
     {
 
-        if (epoch == 26)
-        {
-            int g = 0;
-            g = 9;
-        }
-
         siftSatellite(initialData, epoch);
         bool isSlipOrRise = false;                                                 // Classify valid and slip satellite
         if (0 == epoch) /*-------- Deal with the  first epoch ---------------------*/{

@@ -4,7 +4,8 @@
 #define JDtoMJD          2400000.5
 #define LIGHT_V          299792458                                    // Velocity of light
 #define SEC_DAY          1.0 / 86400.0                                // Seconds in a day
-#define PI               3.141592653589793
+//#define PI               3.141592653589793
+#define PI               3.1415926535898
 #define ToDEG            180 / PI                                     // Convert to Degrees
 #define ToRAD            PI  / 180   /*0.017453 */                     // Convert to radians
 #define OMEGAE_DOT       0.00007292115147

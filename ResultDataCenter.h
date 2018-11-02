@@ -105,6 +105,7 @@ public:
                                 vector<SunMoonPosition>      *smPos_p,
                                 int                          *K_p);             // Note: This function must be preferred to get all file pointer
 private:
+    int  epochSysSatNum(        EpochObservationData          &epochObsData);
     bool dataSourceCheck();
     void inputPPPFile(          QTextStream                   &inText,
                                 FinalDataFile                 &finalDataFile,

@@ -64,7 +64,7 @@ void UD_Model::modelSolution (FinalDataFile    &pppFile,
     VectorXd l2(satNum)                   ; l2.setZero(  satNum);
 
 
-    for (int i = 0; i < satContaine.size(); i++)
+    for (unsigned int i = 0; i < satContaine.size(); i++)
     {
         int index = -1;
         if (satContaine[i].index <  pppFile.allSatelliteData[epoch].eSatData.size()&&
@@ -72,7 +72,7 @@ void UD_Model::modelSolution (FinalDataFile    &pppFile,
             index = satContaine[i].index;
         else
         {
-            for (int j = 0; j < pppFile.allSatelliteData[epoch].eSatData.size(); j++)
+            for (unsigned int j = 0; j < pppFile.allSatelliteData[epoch].eSatData.size(); j++)
             {
                 if (satContaine[i].satTN  == pppFile.allSatelliteData[epoch].
                                              eSatData[j].obsData.satTN){
@@ -214,12 +214,20 @@ void UD_Model::modelSolution (FinalDataFile    &pppFile,
             double m       =  (f1*f1)  / (f1*f1 - f2*f2);
             double n       = -(f2*f2)  / (f1*f1 - f2*f2);
 
-            double Prange1 =   C1 + satData.anteCenterOffset[0];                    // Correction of antenna phase center for pseudorange
-            double Prange2 =   P2 + satData.anteCenterOffset[1];
-            double Phase1  =  (L1 + satData.anteCenterOffset[0]/lambda1 -           // Antenna phase center correction and phase winding correction for carrier phase.
+//            double Prange1 =   C1 + satData.anteCenterOffset[0];                    // Correction of antenna phase center for pseudorange
+//            double Prange2 =   P2 + satData.anteCenterOffset[1];
+//            double Phase1  =  (L1 + satData.anteCenterOffset[0]/lambda1 -           // Antenna phase center correction and phase winding correction for carrier phase.
+//                                    satData.phaseWinding)*lambda1;
+//            double Phase2  =  (L2 + satData.anteCenterOffset[1]/lambda2 -
+//                                    satData.phaseWinding)*lambda2;
+            double Prange1 =   C1 + (LIGHT_V / freq[0])*satData.anteCenterOffset[0];                    // Correction of antenna phase center for pseudorange
+            double Prange2 =   P2 + (LIGHT_V / freq[1])*satData.anteCenterOffset[1];
+            double Phase1  =  (L1 + satData.anteCenterOffset[0]*(LIGHT_V / freq[0])/lambda1 -           // Antenna phase center correction and phase winding correction for carrier phase.
                                     satData.phaseWinding)*lambda1;
-            double Phase2  =  (L2 + satData.anteCenterOffset[1]/lambda2 -
+            double Phase2  =  (L2 + satData.anteCenterOffset[1]*(LIGHT_V / freq[1])/lambda2 -
                                     satData.phaseWinding)*lambda2;
+
+
 
             double iMapTerm     = - satData.tropWetDelayFunc;                       // The i-th tropospheric wet delay mapping function
             double iErrorTerm   =   satData.Delta0;                                 // The i-th multiple error correction
@@ -238,7 +246,7 @@ void UD_Model::modelSolution (FinalDataFile    &pppFile,
             if(epoch == 0)                                                          //first epoch
             {
                 l1[i]    = L[i] - L[i + satNum];                                    // The rest of the L array by using elimination method
-                l2[i]    = L[i  + satNum];
+                l2[i]    = L[i  + satNum];/*if use L[i]?*/
                 B1(i, i) = lambda;                                                  // B1 is full of lambda
             }
         }
@@ -255,7 +263,7 @@ void UD_Model::modelSolution (FinalDataFile    &pppFile,
         }
         /*------------------------  Get x y z map clock sys -----------------------*/
         int  t1 = 0, t2 = 0, t3 = 0, t4 = 0;
-        for (int s = 0; s < pppFile.allSatelliteData[0].eSatData.size(); s++)
+        for (unsigned int s = 0; s < pppFile.allSatelliteData[0].eSatData.size(); s++)
         {
             QString type =   pppFile.allSatelliteData[0].eSatData[s].obsData.satTN.Type;
             if     (type == "G")
@@ -270,7 +278,7 @@ void UD_Model::modelSolution (FinalDataFile    &pppFile,
         int typeNum = t1 + t2 + t3 +t4;
         if (typeNum == sumOfSys)/*unknown*/
         {
-            VectorXd x = (B2.transpose()*B2).lu().solve(B2.transpose()*l2); /*unknown*/
+            x = (B2.transpose()*B2).lu().solve(B2.transpose()*l2); /*unknown*/
             for(int  s = 0; s < 4+sumOfSys; s++)
                 X[s]   = x[s];
             X[3] = 0;                                                               // Trop map is set 0 at the beginning
@@ -315,8 +323,8 @@ void UD_Model::outputResult(FinalDataFile        &pppFile,
     /*------------------------  Set file head -------------------------------------*/
     if (epoch == 0){
         neuText << qSetFieldWidth(15) << "MJD"
-                << qSetFieldWidth(15) << "E(m)"
                 << qSetFieldWidth(15) << "N(m)"
+                << qSetFieldWidth(15) << "E(m)"
                 << qSetFieldWidth(15) << "U(m)"
                 << qSetFieldWidth(15) << "sdn(m)"
                 << qSetFieldWidth(15) << "sde(m)"
@@ -342,8 +350,8 @@ void UD_Model::outputResult(FinalDataFile        &pppFile,
         (!ModeFlag::dynamic && !ModeFlag::back))
     {
     neuText << qSetFieldWidth(15) << pppFile.allSatelliteData[epoch].myTime.MJD // 看看改不改成mjd
-            << qSetFieldWidth(15) << ENU(0)
             << qSetFieldWidth(15) << ENU(1)
+            << qSetFieldWidth(15) << ENU(0)
             << qSetFieldWidth(15) << ENU(2)
             << qSetFieldWidth(15) << sqrt(fabs(Q(0,0)))
             << qSetFieldWidth(15) << sqrt(fabs(Q(1,1)))

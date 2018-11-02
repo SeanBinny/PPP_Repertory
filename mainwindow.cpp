@@ -123,22 +123,6 @@ void MainWindow::on_pushButton_OPENFILE_clicked()
             obsFile.readFile();
         }
     } // end for
-
-
-//    // 下面这一块  是否放入PPPoutFile里面
-//    int coordDate  =   obsFile.AllObservationData.front().myTime.GPT.week * 10 +
-//                   int(obsFile.AllObservationData.front().myTime.GPT.sec  * SEC_DAY);
-//    int posOfCoord =   DataMatchingCenter::seekApproxCoordPos(coordFile, obsFile.MARKER_NAME, coordDate);
-//    if (posOfCoord == -1)
-//        throw illegalParameterValue("Precision coordinate can't find !");
-//    else
-//    {
-//        obsFile.APPROX_POSITION[0] = coordFile.stationCoordinateData[posOfCoord].obsPos[0];
-//        obsFile.APPROX_POSITION[1] = coordFile.stationCoordinateData[posOfCoord].obsPos[1];
-//        obsFile.APPROX_POSITION[2] = coordFile.stationCoordinateData[posOfCoord].obsPos[2];
-//    }
-
-
     ResultFile_PPP resFile;
     resFile.getFilesPtr(&ephFile, &clkFile, &oceFile,   &antFile,
                         &erpFile, &obsFile, &coordFile, &sunMoonPos,  navFile.K);
@@ -162,6 +146,35 @@ void MainWindow::on_pushButton_OPENFILE_clicked()
 
 void MainWindow::on_pushButton_PPP_clicked()
 {
+    ModeFlag::hasGPS   = true;
+    ModeFlag::P1_P2    = true;
+    ModeFlag::Model_UD = true;
+    ModeFlag::TF       = false;
+    ModeFlag::getSystemNum();
+
+    ObsJudgeCenter::eleMaskAngle = 5;   // ele set 5 degree
+
     ResultFile_PPP resFile;
+ //   resFile.setFilePath("D:\\PPPData\\cut0_rinex\\result\\cut01210.PPP");
+//    resFile.setFilePath("D:\\PPPData\\my.PPP");
+    resFile.setFilePath("D:\\PPPData\\cut01210.PPP");
+    resFile.readFile();
+
+
+    QFile inFile("D:\\PPPData\\neu.neu");
+    if (! inFile.open( QIODevice::WriteOnly))
+    {
+          QMessageBox::warning(NULL,  "warning", "errorMessag",
+                               QMessageBox::Yes, QMessageBox::Yes);
+    }
+    QTextStream neuText(&inFile);
+    FilterProcessingCenter pppFilter;
+    pppFilter.filterProcessing(resFile.finalDataFile, neuText);
+
+
+    QMessageBox::information(this, "Document", "成功选择文件", QMessageBox::Ok | QMessageBox::Cancel);
+
+
+
 
 }
