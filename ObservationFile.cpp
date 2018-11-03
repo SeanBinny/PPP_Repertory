@@ -97,7 +97,7 @@ void Rinex3_FileCenter::initialObsTypeLibraty()
 
 /*------------------------------------------------------------------------------
  * Name     : getTypeIndex
- * Function : Get the position of observation in a line
+ * Function : Get  position of observation in a line
  * Input    : QVector<QString> obsTypeOrder .(Array saves type order read from file)
               Rinex3ObsTypeLibrary system .(Saves all observe type in Rinex 3 format)
               QString *obsTypeOfFile .(Saves observe type read in this file)
@@ -130,11 +130,11 @@ int *Rinex3_FileCenter::getTypeIndex(QVector<QString> obsTypeOrder,
         /*------------------ Find position index ------------------------------*/
         for(int k = 0; k < helpNum; k++)                                         // Library loop
         {
-            for(int j = 0; j < obsTypeOrder.size(); j++)                         // Observation order loop
+            for(int j = 0; j < obsTypeOrder.size(); j++)                         // Select the best observation value type
             {
                 if(obsTypeOrder[j].indexOf(helpType[k]) >= 0)
                 {
-                   resTypeIndex [type] = j;
+                   resTypeIndex [type] = j;                                      // Record best value index
                    obsTypeOfFile[type] = obsTypeOrder[j];
                    break;
                 }
@@ -154,8 +154,8 @@ int *Rinex3_FileCenter::getTypeIndex(QVector<QString> obsTypeOrder,
  * Output   : int *(return special array)
  *-----------------------------------------------------------------------------*/
 int *Rinex3_FileCenter::setTypePos(QString system, int tempPosArray[6])
-{
-    int *resPosArray = new int[9]{-1,-1,-1,-1,-1,-1,-1,-1,-1};
+{                                                                               // 0, 1, 2, 3, 4, 5, 6, 7, 8
+    int *resPosArray = new int[9]{-1,-1,-1,-1,-1,-1,-1,-1,-1};                  // C1 P1 L1 C2 P2 L2 C3 P3 L3
 
     if (system == "G"  || system == "C" || system == "E")
     {
@@ -182,6 +182,7 @@ int *Rinex3_FileCenter::setTypePos(QString system, int tempPosArray[6])
               int typePosArray[9] .( Array where save index of all types )
               QString lineQStr .( Target line )
  * Output   : None
+ * Note     : C3, P1, C2 are not use
  *-----------------------------------------------------------------------------*/
 void Rinex3_FileCenter::getObserveDataInLine(ObservationData &ObsData,
                                              int typePosArray[9], QString lineQStr)

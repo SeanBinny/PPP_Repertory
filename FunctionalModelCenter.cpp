@@ -214,20 +214,12 @@ void UD_Model::modelSolution (FinalDataFile    &pppFile,
             double m       =  (f1*f1)  / (f1*f1 - f2*f2);
             double n       = -(f2*f2)  / (f1*f1 - f2*f2);
 
-//            double Prange1 =   C1 + satData.anteCenterOffset[0];                    // Correction of antenna phase center for pseudorange
-//            double Prange2 =   P2 + satData.anteCenterOffset[1];
-//            double Phase1  =  (L1 + satData.anteCenterOffset[0]/lambda1 -           // Antenna phase center correction and phase winding correction for carrier phase.
-//                                    satData.phaseWinding)*lambda1;
-//            double Phase2  =  (L2 + satData.anteCenterOffset[1]/lambda2 -
-//                                    satData.phaseWinding)*lambda2;
-            double Prange1 =   C1 + (LIGHT_V / freq[0])*satData.anteCenterOffset[0];                    // Correction of antenna phase center for pseudorange
-            double Prange2 =   P2 + (LIGHT_V / freq[1])*satData.anteCenterOffset[1];
-            double Phase1  =  (L1 + satData.anteCenterOffset[0]*(LIGHT_V / freq[0])/lambda1 -           // Antenna phase center correction and phase winding correction for carrier phase.
+            double Prange1 =   C1 + satData.anteCenterOffset[0];                    // Correction of antenna phase center for pseudorange
+            double Prange2 =   P2 + satData.anteCenterOffset[1];
+            double Phase1  =  (L1 + satData.anteCenterOffset[0]/lambda1 -           // Antenna phase center correction and phase winding correction for carrier phase.
                                     satData.phaseWinding)*lambda1;
-            double Phase2  =  (L2 + satData.anteCenterOffset[1]*(LIGHT_V / freq[1])/lambda2 -
+            double Phase2  =  (L2 + satData.anteCenterOffset[1]/lambda2 -
                                     satData.phaseWinding)*lambda2;
-
-
 
             double iMapTerm     = - satData.tropWetDelayFunc;                       // The i-th tropospheric wet delay mapping function
             double iErrorTerm   =   satData.Delta0;                                 // The i-th multiple error correction
@@ -371,16 +363,7 @@ void UD_Model::outputResult(FinalDataFile        &pppFile,
      qDebug() << "The fileter " << epoch << " ....";
     }
 
-    if (!ModeFlag::dynamic && !ModeFlag::back)                                  // Static  model
-    {
-        if (fabs(dxyz(0)) < 0.25 && fabs(dxyz(1)) < 0.25)
-        {
-            xyzCoord.X += ENU(0)*ENU(0);
-            xyzCoord.Y += ENU(1)*ENU(1);
-            xyzCoord.Z += ENU(2)*ENU(2);
-            sum++;
-        }
-    }
+
 }
 
 /*----------------------------------------------------------------------------------

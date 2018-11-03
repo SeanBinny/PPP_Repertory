@@ -331,7 +331,7 @@ void ResultFile_PPP::outputSingleEpochData( QTextStream           &outText,
     for ( int m = 0; m < 3; m++)
         sunPos[m]  = smPositon(m, 0), moonPos[m] = smPositon(m, 1);
 
- TDT.EPT.second = int(TDT.EPT.second);
+// TDT.EPT.second = int(TDT.EPT.second);
     Vector3d  solidTide(0, 0, 0);                                               // Calculate stide and otide
     solidTide = ErrorModel::solidTideCor(recXYZ, sunPos, moonPos, coordPar, TDT);
     Vector3d  oceanTide(0, 0, 0);
