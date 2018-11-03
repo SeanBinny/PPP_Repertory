@@ -77,7 +77,7 @@ protected:
 /*****************************    Rinex version 3 format  files     **********************************************************/
 /*                    ****************************************************                                                   */
 /*-----------------------------------------------------------------------
- * Function : Provides data help to read version 3 files
+ * Function : Help to read version 3 files
  *----------------------------------------------------------------------*/
 struct Rinex3ObsTypeLibrary                                              // Only use C1 L1 P2 L2 P3 L3
 {
